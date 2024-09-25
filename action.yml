@@ -1,21 +1,18 @@
-name: Hello, World!
-description: Greet someone and record the time
-author: GitHub Actions
+name: Github Workflow Stats
+description: Export Github Workflow stats into Postgres
+author: Fedor Dikarev
+branding:
+  icon: activity
+  color: yellow
 
 # Define your inputs here.
 inputs:
-  who-to-greet:
-    description: Who to greet
+  db_uri:
+    description: Postgres DB URI
     required: true
-    default: World
-
-# Define your outputs here.
-outputs:
-  time:
-    description: The time we greeted you
 
 runs:
   using: docker
-  image: Dockerfile
+  image: "docker://yatheo/gh-workflow-stats-action:latest"
   env:
-    INPUT_WHO_TO_GREET: ${{ inputs.who-to-greet }}
+    DB_URI: ${{ inputs.db_uri }}
