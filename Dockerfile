@@ -21,6 +21,7 @@ RUN go mod download
 
 COPY cmd/gh-action/ ./
 
+ENV CGO_ENABLED=0
 RUN go build -v -o ./gh-action-workflow-stats
 
 
