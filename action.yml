@@ -10,9 +10,21 @@ inputs:
   db_uri:
     description: Postgres DB URI
     required: true
+  db_table:
+    description: Table name to store Workflow stats
+    required: true
+  gh_run_id:
+    description: Workflow Run Id to get information on
+    required: true
+  gh_token:
+    description: Github Token with permissions to access Workflows. Not required for public repos.
+    required: false
 
 runs:
   using: docker
   image: "docker://yatheo/gh-workflow-stats-action:latest"
   env:
     DB_URI: ${{ inputs.db_uri }}
+    DB_TABLE: ${{ inputs.db_table }}
+    GH_RUN_ID: ${{ inputs.gh_run_id }}
+    GH_TOKEN: ${{ inputs.gh_token }}

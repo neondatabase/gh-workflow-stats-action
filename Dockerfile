@@ -1,11 +1,42 @@
-# Set the base image to use for subsequent instructions
-FROM alpine:3.20
+ARG	GO_VER=1.23.1
+ARG DEBIAN_VER=bookworm
 
-# Set the working directory inside the container
-WORKDIR /usr/src
+FROM golang:${GO_VER}-${DEBIAN_VER} AS go-build
 
-# Copy any source file(s) required for the action
-COPY entrypoint.sh .
+ENV USER=gh-action
+ENV UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    "${USER}"
 
-# Configure the container to be run as an executable
-ENTRYPOINT ["/usr/src/entrypoint.sh"]
+WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY cmd/gh-action/ ./
+
+RUN go build -v -o ./gh-action-workflow-stats
+
+
+FROM scratch
+
+# Setup SSL certs
+COPY --from=go-build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# Setup user
+COPY --from=go-build /etc/passwd /etc/group /etc/
+USER gh-action:gh-action
+
+# Copy the static executable
+COPY --from=go-build /build/gh-action-workflow-stats /gh-action-workflow-stats
+
+# Run the binary
+ENTRYPOINT ["/gh-action-workflow-stats"]
+
+
