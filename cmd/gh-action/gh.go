@@ -10,6 +10,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func printJobInfo(job *github.WorkflowJob) {
+	fmt.Printf("== Job %s %s, (created: %v, started: %v, completed: %v)\n",
+		*job.Name,
+		*job.Status,
+		*job.CreatedAt,
+		job.StartedAt,
+		job.CompletedAt,
+	)
+	for _, step := range job.Steps {
+		fmt.Printf("Step %s, started %v, completed %v\n", *step.Name, step.StartedAt, step.CompletedAt)
+	}
+}
+
 func createRecords(ctx context.Context, conf configType) (*WorkflowStat, error) {
 	var token *http.Client
 	if len(conf.githubToken) != 0 {
@@ -34,6 +47,34 @@ func createRecords(ctx context.Context, conf configType) (*WorkflowStat, error) 
 	if workflowData == nil {
 		fmt.Printf("Got nil\n")
 		return &WorkflowStat{RepoName: conf.repository}, nil
+	}
+
+	attemptData, _, err := client.Actions.GetWorkflowRunAttempt(
+		ctx,
+		conf.owner, conf.repo,
+		*workflowData.ID,
+		*workflowData.RunAttempt,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// fmt.Printf("AttemptData: %+v\n", attemptData)
+
+	jobsData, _, err := client.Actions.ListWorkflowJobsAttempt(
+		ctx,
+		conf.owner, conf.repo,
+		*attemptData.ID,
+		int64(*workflowData.RunAttempt),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("JobsData: %+v\n", jobsData)
+	for _, job := range jobsData.Jobs {
+		printJobInfo(job)
 	}
 
 	return &WorkflowStat{
