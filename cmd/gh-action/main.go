@@ -39,5 +39,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	saveWorkflowRunAttempt(conf, lastAttemptRun)
+	err = saveWorkflowRunAttempt(conf, lastAttemptRun)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
