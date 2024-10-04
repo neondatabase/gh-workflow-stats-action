@@ -151,8 +151,8 @@ func saveJobInfo(conf configType, workflowJob *github.WorkflowJob) error {
 
 func saveStepInfo(conf configType, job *github.WorkflowJob, step *github.TaskStep) error {
 	query := fmt.Sprintf("INSERT INTO %s_steps (%s) VALUES (%s)", conf.dbTable,
-		"jobid, runid, runattempt, name, status, conclusion, number, startedat, completead",
-		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completead",
+		"jobid, runid, runattempt, name, status, conclusion, number, startedat, completedat",
+		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completedat",
 	)
 
 	_, err := conf.db.NamedExec(query, ghWorkflowJobStepRec(job, step))
