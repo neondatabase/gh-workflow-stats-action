@@ -11,7 +11,7 @@ import (
 
 var (
 	schemeWorkflowRunsStats = `
-	CREATE TABLE %s (
+	CREATE TABLE IF NOT EXISTS %s (
 		workflowid BIGINT,
 		name	   TEXT,
 		status     TEXT,
@@ -25,19 +25,19 @@ var (
 		PRIMARY KEY(workflowid, runattempt)
 	)
 	`
-	schemeWorkflowRuns = `
+	schemeWorkflowRunAttempts = `
 	CREATE TABLE IF NOT EXISTS %s (
 		workflowid BIGINT,
 		name	   TEXT,
 		status     TEXT,
 		conclusion TEXT,
-		runid      INT,
+		runid      BIGINT,
 		runattempt INT,
 		startedat  TIMESTAMP,
 		updatedat  TIMESTAMP,
 		reponame   TEXT,
 		event      TEXT,
-		PRIMARY KEY(workflowid, runattempt)
+		PRIMARY KEY(workflowid, runid, runattempt)
 	)
 	`
 	schemeWorkflowJobs = `
@@ -73,12 +73,12 @@ var (
 )
 
 func initDatabase(conf configType) error {
-	db, err := sqlx.Connect("postgres", conf.dbUri)
+	_, err := conf.db.Exec(fmt.Sprintf(schemeWorkflowRunsStats, conf.dbTable))
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(fmt.Sprintf(schemeWorkflowRunsStats, conf.dbTable))
+	_, err = conf.db.Exec(fmt.Sprintf(schemeWorkflowRunAttempts, conf.dbTable + "_attempts"))
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func saveWorkflowRun(conf configType, record *WorkflowRunRec) error {
 func saveWorkflowRunAttempt(conf configType, workflowRun *github.WorkflowRun) error {
 	query := fmt.Sprintf("INSERT INTO %s_attempts (%s) VALUES (%s)", conf.dbTable,
 		"workflowid, name, status, conclusion, runid, runattempt, startedAt, updatedAt, repoName, event",
-		":WorkflowID, :Name, :Status, :Conclusion, :runid, :runattempt, :startedat, :updatedat, :reponame, :event",
+		":workflowid, :name, :status, :conclusion, :runid, :runattempt, :startedat, :updatedat, :reponame, :event",
 	)
 
 	_, err := conf.db.NamedExec(query, ghWorkflowRunRec(workflowRun))

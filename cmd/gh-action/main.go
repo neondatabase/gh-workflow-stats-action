@@ -20,6 +20,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = initDatabase(conf)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	initGhClient(&conf)
 
