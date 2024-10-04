@@ -83,18 +83,22 @@ func initDatabase(conf configType) error {
 	return nil
 }
 
-func saveRecords(conf configType, records *WorkflowStat) error {
+func connectDB(conf *configType) error {
 	db, err := sqlx.Connect("postgres", conf.dbUri)
 	if err != nil {
 		return err
 	}
+	conf.db = db
+	return nil
+}
 
+func saveWorkflowRun(conf configType, records *WorkflowStat) error {
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", conf.dbTable,
 		"workflowid, name, status, conclusion, runid, runattempt, startedAt, updatedAt, repoName, event",
 		":workflowid, :name, :status, :conclusion, :runid, :runattempt, :startedat, :updatedat, :reponame, :event",
 	)
 
-	_, err = db.NamedExec(query, *records)
+	_, err := conf.db.NamedExec(query, *records)
 
 	if err != nil {
 		return err

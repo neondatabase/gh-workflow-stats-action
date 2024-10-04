@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type configType struct {
 	dbUri       string
 	dbTable     string
+	db			*sqlx.DB
 	runID       string
 	repository  string
 	owner       string
@@ -47,6 +50,7 @@ func getConfig() (configType, error) {
 	return configType{
 		dbUri:       dbUri,
 		dbTable:     dbTable,
+		db:          nil,
 		runID:       runID,
 		repository:  repository,
 		owner:       repoDetails[0],
