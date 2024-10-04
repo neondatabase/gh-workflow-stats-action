@@ -23,7 +23,7 @@ func printJobInfo(job *github.WorkflowJob) {
 	}
 }
 
-func createRecords(ctx context.Context, conf configType) (*WorkflowStat, error) {
+func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowStat, error) {
 	var token *http.Client
 	if len(conf.githubToken) != 0 {
 		token = oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(

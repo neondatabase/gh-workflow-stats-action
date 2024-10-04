@@ -14,13 +14,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var records *WorkflowStat
-	records, err = createRecords(ctx, conf)
+	err = connectDB(&conf)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = saveRecords(conf, records)
+	var workflowStat *WorkflowStat
+	workflowStat, err = getWorkflowStat(ctx, conf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = saveWorkflowRun(conf, workflowStat)
 	if err != nil {
 		log.Fatal(err)
 	}
