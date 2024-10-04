@@ -60,13 +60,13 @@ var (
 	)`
 	schemeWorkflowJobsSteps = `
 	CREATE TABLE IF NOT EXISTS %s (
-		JobId		BIGINT
-		RunId		BIGINT
-		Name		TEXT
-		Status		TEXT
-		Conclusion	TEXT
-		Number		BIGINT
-		StartedAt	TIMESTAMP
+		JobId		BIGINT,
+		RunId		BIGINT,
+		Name		TEXT,
+		Status		TEXT,
+		Conclusion	TEXT,
+		Number		BIGINT,
+		StartedAt	TIMESTAMP,
 		CompletedAt	TIMESTAMP
 	)
 	`
