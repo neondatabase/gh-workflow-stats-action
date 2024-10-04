@@ -155,6 +155,6 @@ func saveStepInfo(conf configType, job *github.WorkflowJob, step *github.TaskSte
 		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completead",
 	)
 
-	_, err := conf.db.Exec(query, ghWorkflowJobStepRec(job, step))
+	_, err := conf.db.NamedExec(query, ghWorkflowJobStepRec(job, step))
 	return err
 }
