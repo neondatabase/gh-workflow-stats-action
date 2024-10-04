@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	scheme = `
+	schemeWorkflowRunsStats = `
 	CREATE TABLE %s (
 		workflowid BIGINT,
 		name	   TEXT,
@@ -23,6 +23,51 @@ var (
 		PRIMARY KEY(workflowid, runattempt)
 	)
 	`
+	schemeWorkflowRuns = `
+	CREATE TABLE IF NOT EXISTS %s (
+		workflowid BIGINT,
+		name	   TEXT,
+		status     TEXT,
+		conclusion TEXT,
+		runid      INT,
+		runattempt INT,
+		startedat  TIMESTAMP,
+		updatedat  TIMESTAMP,
+		reponame   TEXT,
+		event      TEXT,
+		PRIMARY KEY(workflowid, runattempt)
+	)
+	`
+	schemeWorkflowJobs = `
+	CREATE TABLE IF NOT EXISTS %s (
+		JobId		BIGINT
+		RunID		BIGINT
+		NodeID 		TEXT
+		HeadBranch	TEXT
+		HeadSHA		TEXT
+		Status		TEXT
+		Conclusion	TEXT
+		CreatedAt	TIMESTAMP
+		StartedAt	TIMESTAMP
+		CompletedAt	TIMESTAMP
+		Name		TEXT
+		RunnerName	TEXT
+		RunnerGroupName	TEXT
+		RunAttempt		BIGINT
+		WorkflowName	TEXT
+	)`
+	schemeWorkflowJobsSteps = `
+	CREATE TABLE IF NOT EXISTS %s (
+		JobId		BIGINT
+		RunId		BIGINT
+		Name		TEXT
+		Status		TEXT
+		Conclusion	TEXT
+		Number		BIGINT
+		StartedAt	TIMESTAMP
+		CompletedAt	TIMESTAMP
+	)
+	`
 )
 
 func initDatabase(conf configType) error {
@@ -31,7 +76,7 @@ func initDatabase(conf configType) error {
 		return err
 	}
 
-	_, err = db.Exec(fmt.Sprintf(scheme, conf.dbTable))
+	_, err = db.Exec(fmt.Sprintf(schemeWorkflowRunsStats, conf.dbTable))
 	if err != nil {
 		return err
 	}
