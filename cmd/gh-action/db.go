@@ -62,6 +62,7 @@ var (
 	CREATE TABLE IF NOT EXISTS %s (
 		JobId		BIGINT,
 		RunId		BIGINT,
+		RunAttempt	BIGINT,
 		Name		TEXT,
 		Status		TEXT,
 		Conclusion	TEXT,
@@ -135,5 +136,25 @@ func saveJobInfo(conf configType, workflowJob *github.WorkflowJob) error {
 	)
 
 	_, err := conf.db.NamedExec(query, ghWorkflowJobRec(workflowJob))
+	if err != nil {
+		return err
+	}
+
+	for _, step := range workflowJob.Steps {
+		err = saveStepInfo(conf, workflowJob, step)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func saveStepInfo(conf configType, job *github.WorkflowJob, step *github.TaskStep) error {
+	query := fmt.Sprintf("INSERT INTO %s_steps (%s) VALUES (%s)", conf.dbTable,
+		"jobid, runid, runattempt, name, status, conclusion, number, startedat, completead",
+		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completead",
+	)
+
+	_, err := conf.db.Exec(query, ghWorkflowJobStepRec(job, step))
 	return err
 }
