@@ -42,20 +42,20 @@ var (
 	`
 	schemeWorkflowJobs = `
 	CREATE TABLE IF NOT EXISTS %s (
-		JobId		BIGINT
-		RunID		BIGINT
-		NodeID 		TEXT
-		HeadBranch	TEXT
-		HeadSHA		TEXT
-		Status		TEXT
-		Conclusion	TEXT
-		CreatedAt	TIMESTAMP
-		StartedAt	TIMESTAMP
-		CompletedAt	TIMESTAMP
-		Name		TEXT
-		RunnerName	TEXT
-		RunnerGroupName	TEXT
-		RunAttempt		BIGINT
+		JobId		BIGINT,
+		RunID		BIGINT,
+		NodeID 		TEXT,
+		HeadBranch	TEXT,
+		HeadSHA		TEXT,
+		Status		TEXT,
+		Conclusion	TEXT,
+		CreatedAt	TIMESTAMP,
+		StartedAt	TIMESTAMP,
+		CompletedAt	TIMESTAMP,
+		Name		TEXT,
+		RunnerName	TEXT,
+		RunnerGroupName	TEXT,
+		RunAttempt		BIGINT,
 		WorkflowName	TEXT
 	)`
 	schemeWorkflowJobsSteps = `
@@ -125,5 +125,15 @@ func saveWorkflowRunAttempt(conf configType, workflowRun *github.WorkflowRun) er
 	)
 
 	_, err := conf.db.NamedExec(query, ghWorkflowRunRec(workflowRun))
+	return err
+}
+
+func saveJobInfo(conf configType, workflowJob *github.WorkflowJob) error {
+	query := fmt.Sprintf("INSERT INTO %s_jobs (%s) VALUES (%s)", conf.dbTable,
+		"jobid, runid, nodeid, headbranch, headsha, status, conclustion, createdat, startedat, completedat, name, runnername, runnergroupname, runattempt, workflowname",
+		":jobid, :runid, :nodeid, :headbranch, :headsha, :status, :conclustion, :createdat, :startedat, :completedat, :name, :runnername, :runnergroupname, :runattempt, :workflowname",
+	)
+
+	_, err := conf.db.NamedExec(query, ghWorkflowJobRec(workflowJob))
 	return err
 }

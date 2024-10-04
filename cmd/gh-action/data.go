@@ -33,3 +33,41 @@ func ghWorkflowRunRec(w *github.WorkflowRun) *WorkflowRunRec {
 		Event:      w.GetEvent(),
 	}
 }
+
+type WorkflowJobRec struct {
+	JobId	int64
+	RunId	int64
+	NodeID	string
+	HeadBranch	string
+	HeadSHA	string
+	Status 	string
+	Conclusion string
+	CreatedAt time.Time
+	StartedAt time.Time
+	CompletedAt time.Time
+	Name string
+	RunnerName string
+	RunnerGroupName string
+	RunAttempt int64
+	WorkflowName string
+}
+
+func ghWorkflowJobRec(j *github.WorkflowJob) *WorkflowJobRec {
+	return &WorkflowJobRec{
+		JobId: j.GetID(),
+		RunId: j.GetRunID(),
+		NodeID: j.GetNodeID(),
+		HeadBranch: j.GetHeadBranch(),
+		HeadSHA: j.GetHeadSHA(),
+		Status: j.GetStatus(),
+		Conclusion: j.GetConclusion(),
+		CreatedAt: j.GetCreatedAt().Time,
+		StartedAt: j.GetStartedAt().Time,
+		CompletedAt: j.GetCompletedAt().Time,
+		Name: j.GetName(),
+		RunnerName: j.GetRunnerName(),
+		RunnerGroupName: j.GetRunnerGroupName(),
+		RunAttempt: j.GetRunAttempt(),
+		WorkflowName: j.GetWorkflowName(),
+	}
+}

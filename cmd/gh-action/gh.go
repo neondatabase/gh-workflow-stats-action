@@ -89,3 +89,17 @@ func getWorkflowAttempt(ctx context.Context, conf configType, attempt int64) (*g
 	}
 	return workflowRunData, nil
 }
+
+func getWorkflowAttemptJobs(ctx context.Context, conf configType, attempt int64) ([]*github.WorkflowJob, error) {
+	jobsData, _, err := conf.ghClient.Actions.ListWorkflowJobsAttempt(
+		ctx,
+		conf.owner, conf.repo,
+		conf.runID,
+		attempt,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return jobsData.Jobs, nil
+}

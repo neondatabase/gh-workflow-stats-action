@@ -39,12 +39,21 @@ func main() {
 	}
 
 	var lastAttemptRun *github.WorkflowRun
-	lastAttemptRun, err = getWorkflowAttempt(ctx, conf, workflowStat.RunAttempt)
+	lastAttemptN := workflowStat.RunAttempt
+	lastAttemptRun, err = getWorkflowAttempt(ctx, conf, lastAttemptN)
 	if err != nil {
 		log.Fatal(err)
 	}
 	err = saveWorkflowRunAttempt(conf, lastAttemptRun)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	jobsInfo, err := getWorkflowAttemptJobs(ctx, conf, lastAttemptN)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, jobInfo := range jobsInfo {
+		saveJobInfo(conf, jobInfo)
 	}
 }
