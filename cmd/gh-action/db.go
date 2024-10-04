@@ -82,6 +82,16 @@ func initDatabase(conf configType) error {
 	if err != nil {
 		return err
 	}
+
+	_, err = conf.db.Exec(fmt.Sprintf(schemeWorkflowJobs, conf.dbTable + "_jobs"))
+	if err != nil {
+		return err
+	}
+
+	_, err = conf.db.Exec(fmt.Sprintf(schemeWorkflowJobsSteps, conf.dbTable + "_steps"))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
