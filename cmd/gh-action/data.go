@@ -71,3 +71,15 @@ func ghWorkflowJobRec(j *github.WorkflowJob) *WorkflowJobRec {
 		WorkflowName: j.GetWorkflowName(),
 	}
 }
+
+type WorkflowJobStepRec struct {
+	JobId	int64
+	RunId 	int64
+	RunAttempt 	int64
+	Name 	string
+	Status 	string
+	Conclusion 	string
+	Number 	int64
+	StartedAt 	time.Time
+	CompletedAt time.Time
+}
