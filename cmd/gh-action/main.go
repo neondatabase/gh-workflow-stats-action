@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/google/go-github/v65/github"
@@ -54,6 +55,9 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, jobInfo := range jobsInfo {
-		saveJobInfo(conf, jobInfo)
+		err = saveJobInfo(conf, jobInfo)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }

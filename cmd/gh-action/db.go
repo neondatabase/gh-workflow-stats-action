@@ -130,8 +130,8 @@ func saveWorkflowRunAttempt(conf configType, workflowRun *github.WorkflowRun) er
 
 func saveJobInfo(conf configType, workflowJob *github.WorkflowJob) error {
 	query := fmt.Sprintf("INSERT INTO %s_jobs (%s) VALUES (%s)", conf.dbTable,
-		"jobid, runid, nodeid, headbranch, headsha, status, conclustion, createdat, startedat, completedat, name, runnername, runnergroupname, runattempt, workflowname",
-		":jobid, :runid, :nodeid, :headbranch, :headsha, :status, :conclustion, :createdat, :startedat, :completedat, :name, :runnername, :runnergroupname, :runattempt, :workflowname",
+		"jobid, runid, nodeid, headbranch, headsha, status, conclusion, createdat, startedat, completedat, name, runnername, runnergroupname, runattempt, workflowname",
+		":jobid, :runid, :nodeid, :headbranch, :headsha, :status, :conclusion, :createdat, :startedat, :completedat, :name, :runnername, :runnergroupname, :runattempt, :workflowname",
 	)
 
 	_, err := conf.db.NamedExec(query, ghWorkflowJobRec(workflowJob))
