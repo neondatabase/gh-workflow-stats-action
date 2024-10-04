@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*.*.*"
 
 permissions:
   contents: read
@@ -29,6 +31,8 @@ jobs:
             type=ref,enable=true,priority=600,prefix=,suffix=,event=branch
             # pull request event
             type=ref,enable=true,priority=600,prefix=pr-,suffix=,event=pr
+            # tags event
+            type=semver,pattern={{raw}}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
