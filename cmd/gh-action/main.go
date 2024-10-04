@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+
+	"github.com/google/go-github/v65/github"
 )
 
 func main() {
@@ -32,5 +34,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// lastAttemptRun, err = getWorkflowAttempt(ctx, conf, workflowStat.RunAttempt)
+	var lastAttemptRun *github.WorkflowRun
+	lastAttemptRun, err = getWorkflowAttempt(ctx, conf, workflowStat.RunAttempt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	saveWorkflowRunAttempt(conf, lastAttemptRun)
 }

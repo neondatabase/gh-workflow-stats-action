@@ -75,3 +75,17 @@ func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowRunRec, err
 
 	return ghWorkflowRunRec(workflowRunData), nil
 }
+
+func getWorkflowAttempt(ctx context.Context, conf configType, attempt int64) (*github.WorkflowRun, error) {
+	workflowRunData, _, err := conf.ghClient.Actions.GetWorkflowRunAttempt(
+		ctx,
+		conf.owner, conf.repo,
+		conf.runID,
+		int(attempt),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return workflowRunData, nil
+}
