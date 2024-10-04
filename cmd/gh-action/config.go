@@ -3,17 +3,23 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+
+	"github.com/google/go-github/v65/github"
+	"github.com/jmoiron/sqlx"
 )
 
 type configType struct {
 	dbUri       string
 	dbTable     string
-	runID       string
+	db			*sqlx.DB
+	runID       int64
 	repository  string
 	owner       string
 	repo        string
 	githubToken string
+	ghClient    *github.Client
 }
 
 func getConfig() (configType, error) {
@@ -32,9 +38,14 @@ func getConfig() (configType, error) {
 		return configType{}, fmt.Errorf("missing env: GITHUB_REPOSITORY")
 	}
 
-	runID := os.Getenv("GH_RUN_ID")
-	if len(runID) == 0 {
+	envRunID := os.Getenv("GH_RUN_ID")
+	var runID int64
+	if len(envRunID) == 0 {
 		return configType{}, fmt.Errorf("missing env: GH_RUN_ID")
+	}
+	runID, err := strconv.ParseInt(envRunID, 10, 64)
+	if err != nil {
+		return configType{}, fmt.Errorf("GH_RUN_ID must be integer, error: %v", err)
 	}
 
 	githubToken := os.Getenv("GH_TOKEN")
@@ -47,6 +58,7 @@ func getConfig() (configType, error) {
 	return configType{
 		dbUri:       dbUri,
 		dbTable:     dbTable,
+		db:          nil,
 		runID:       runID,
 		repository:  repository,
 		owner:       repoDetails[0],

@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*.*.*"
 
 permissions:
   contents: read
@@ -18,6 +20,19 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: Docker Meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images:
+            ${{ vars.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # branch event
+            type=ref,enable=true,priority=600,prefix=,suffix=,event=branch
+            # pull request event
+            type=ref,enable=true,priority=600,prefix=pr-,suffix=,event=pr
+            # tags event
+            type=semver,pattern={{raw}}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -35,4 +50,5 @@ jobs:
         with:
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
