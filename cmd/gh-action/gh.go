@@ -23,7 +23,7 @@ func printJobInfo(job *github.WorkflowJob) {
 	}
 }
 
-func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowStat, error) {
+func initGhClient(conf *configType) {
 	var token *http.Client
 	if len(conf.githubToken) != 0 {
 		token = oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
@@ -31,25 +31,27 @@ func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowStat, error
 		))
 	}
 
-	client := github.NewClient(token)
+	conf.ghClient = github.NewClient(token)
+}
 
+func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowRunRec, error) {
 	runID, err := strconv.ParseInt(conf.runID, 10, 64)
 	if err != nil {
 		return nil, err
 	}
 
 	fmt.Printf("Getting data for %s/%s, runId %d\n", conf.owner, conf.repo, runID)
-	workflowRunData, _, err := client.Actions.GetWorkflowRunByID(ctx, conf.owner, conf.repo, runID)
+	workflowRunData, _, err := conf.ghClient.Actions.GetWorkflowRunByID(ctx, conf.owner, conf.repo, runID)
 	if err != nil {
 		return nil, err
 	}
 
 	if workflowRunData == nil {
 		fmt.Printf("Got nil\n")
-		return &WorkflowStat{RepoName: conf.repository}, nil
+		return &WorkflowRunRec{RepoName: conf.repository}, nil
 	}
 
-	attemptData, _, err := client.Actions.GetWorkflowRunAttempt(
+	attemptData, _, err := conf.ghClient.Actions.GetWorkflowRunAttempt(
 		ctx,
 		conf.owner, conf.repo,
 		*workflowRunData.ID,
@@ -62,7 +64,7 @@ func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowStat, error
 
 	// fmt.Printf("AttemptData: %+v\n", attemptData)
 
-	jobsData, _, err := client.Actions.ListWorkflowJobsAttempt(
+	jobsData, _, err := conf.ghClient.Actions.ListWorkflowJobsAttempt(
 		ctx,
 		conf.owner, conf.repo,
 		*attemptData.ID,
@@ -77,16 +79,5 @@ func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowStat, error
 		printJobInfo(job)
 	}
 
-	return &WorkflowStat{
-		WorkflowId: workflowRunData.GetWorkflowID(),
-		Name:       workflowRunData.GetName(),
-		Status:     workflowRunData.GetStatus(),
-		Conclusion: workflowRunData.GetConclusion(),
-		RunId:      workflowRunData.GetID(),
-		RunAttempt: int64(workflowRunData.GetRunAttempt()),
-		StartedAt:  workflowRunData.GetCreatedAt().Time,
-		UpdatedAt:  workflowRunData.GetUpdatedAt().Time,
-		RepoName:   workflowRunData.GetRepository().GetFullName(),
-		Event:      workflowRunData.GetEvent(),
-	}, nil
+	return ghWorkflowRunRec(workflowRunData), nil
 }

@@ -5,6 +5,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+
+	"github.com/google/go-github/v65/github"
 )
 
 var (
@@ -92,16 +94,26 @@ func connectDB(conf *configType) error {
 	return nil
 }
 
-func saveWorkflowRun(conf configType, records *WorkflowStat) error {
+func saveWorkflowRun(conf configType, record *WorkflowRunRec) error {
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", conf.dbTable,
 		"workflowid, name, status, conclusion, runid, runattempt, startedAt, updatedAt, repoName, event",
 		":workflowid, :name, :status, :conclusion, :runid, :runattempt, :startedat, :updatedat, :reponame, :event",
 	)
 
-	_, err := conf.db.NamedExec(query, *records)
+	_, err := conf.db.NamedExec(query, *record)
 
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func saveWorkflowRunAttempt(conf configType, workflowRun *github.WorkflowRun) error {
+	query := fmt.Sprintf("INSERT INTO %s_attempts (%s) VALUES (%s)", conf.dbTable,
+		"workflowid, name, status, conclusion, runid, runattempt, startedAt, updatedAt, repoName, event",
+		":WorkflowID, :Name, :Status, :Conclusion, :runid, :runattempt, :startedat, :updatedat, :reponame, :event",
+	)
+
+	_, err := conf.db.NamedExec(query, ghWorkflowRunRec(workflowRun))
+	return err
 }

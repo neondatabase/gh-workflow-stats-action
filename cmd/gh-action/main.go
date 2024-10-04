@@ -19,7 +19,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var workflowStat *WorkflowStat
+	initGhClient(&conf)
+
+	var workflowStat *WorkflowRunRec
 	workflowStat, err = getWorkflowStat(ctx, conf)
 	if err != nil {
 		log.Fatal(err)
@@ -29,4 +31,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// lastAttemptRun, err = getWorkflowAttempt(ctx, conf, workflowStat.RunAttempt)
 }

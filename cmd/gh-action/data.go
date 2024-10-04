@@ -2,9 +2,11 @@ package main
 
 import (
 	"time"
+
+	"github.com/google/go-github/v65/github"
 )
 
-type WorkflowStat struct {
+type WorkflowRunRec struct {
 	WorkflowId int64
 	Name       string
 	Status     string
@@ -15,4 +17,19 @@ type WorkflowStat struct {
 	UpdatedAt  time.Time
 	RepoName   string
 	Event      string
+}
+
+func ghWorkflowRunRec(w *github.WorkflowRun) *WorkflowRunRec {
+	return &WorkflowRunRec{
+		WorkflowId: w.GetWorkflowID(),
+		Name:       w.GetName(),
+		Status:     w.GetStatus(),
+		Conclusion: w.GetConclusion(),
+		RunId:      w.GetID(),
+		RunAttempt: int64(w.GetRunAttempt()),
+		StartedAt:  w.GetCreatedAt().Time,
+		UpdatedAt:  w.GetUpdatedAt().Time,
+		RepoName:   w.GetRepository().GetFullName(),
+		Event:      w.GetEvent(),
+	}
 }

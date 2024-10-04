@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/google/go-github/v65/github"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -17,6 +18,7 @@ type configType struct {
 	owner       string
 	repo        string
 	githubToken string
+	ghClient    *github.Client
 }
 
 func getConfig() (configType, error) {
