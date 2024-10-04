@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/google/go-github/v65/github"
 	"golang.org/x/oauth2"
@@ -35,13 +34,8 @@ func initGhClient(conf *configType) {
 }
 
 func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowRunRec, error) {
-	runID, err := strconv.ParseInt(conf.runID, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("Getting data for %s/%s, runId %d\n", conf.owner, conf.repo, runID)
-	workflowRunData, _, err := conf.ghClient.Actions.GetWorkflowRunByID(ctx, conf.owner, conf.repo, runID)
+	fmt.Printf("Getting data for %s/%s, runId %d\n", conf.owner, conf.repo, conf.runID)
+	workflowRunData, _, err := conf.ghClient.Actions.GetWorkflowRunByID(ctx, conf.owner, conf.repo, conf.runID)
 	if err != nil {
 		return nil, err
 	}
