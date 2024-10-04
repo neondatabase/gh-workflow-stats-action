@@ -39,12 +39,12 @@ func createRecords(ctx context.Context, conf configType) (*WorkflowStat, error) 
 	}
 
 	fmt.Printf("Getting data for %s/%s, runId %d\n", conf.owner, conf.repo, runID)
-	workflowData, _, err := client.Actions.GetWorkflowRunByID(ctx, conf.owner, conf.repo, runID)
+	workflowRunData, _, err := client.Actions.GetWorkflowRunByID(ctx, conf.owner, conf.repo, runID)
 	if err != nil {
 		return nil, err
 	}
 
-	if workflowData == nil {
+	if workflowRunData == nil {
 		fmt.Printf("Got nil\n")
 		return &WorkflowStat{RepoName: conf.repository}, nil
 	}
@@ -52,8 +52,8 @@ func createRecords(ctx context.Context, conf configType) (*WorkflowStat, error) 
 	attemptData, _, err := client.Actions.GetWorkflowRunAttempt(
 		ctx,
 		conf.owner, conf.repo,
-		*workflowData.ID,
-		*workflowData.RunAttempt,
+		*workflowRunData.ID,
+		*workflowRunData.RunAttempt,
 		nil,
 	)
 	if err != nil {
@@ -66,7 +66,7 @@ func createRecords(ctx context.Context, conf configType) (*WorkflowStat, error) 
 		ctx,
 		conf.owner, conf.repo,
 		*attemptData.ID,
-		int64(*workflowData.RunAttempt),
+		int64(workflowRunData.GetRunAttempt()),
 		nil,
 	)
 	if err != nil {
@@ -78,15 +78,15 @@ func createRecords(ctx context.Context, conf configType) (*WorkflowStat, error) 
 	}
 
 	return &WorkflowStat{
-		WorkflowId: *workflowData.ID,
-		Name:       *workflowData.Name,
-		Status:     *workflowData.Status,
-		Conclusion: *workflowData.Conclusion,
-		RunId:      *workflowData.RunNumber,
-		RunAttempt: *workflowData.RunAttempt,
-		StartedAt:  workflowData.CreatedAt.Time,
-		UpdatedAt:  workflowData.UpdatedAt.Time,
-		RepoName:   *workflowData.Repository.FullName,
-		Event:      *workflowData.Event,
+		WorkflowId: workflowRunData.GetWorkflowID(),
+		Name:       workflowRunData.GetName(),
+		Status:     workflowRunData.GetStatus(),
+		Conclusion: workflowRunData.GetConclusion(),
+		RunId:      workflowRunData.GetID(),
+		RunAttempt: int64(workflowRunData.GetRunAttempt()),
+		StartedAt:  workflowRunData.GetCreatedAt().Time,
+		UpdatedAt:  workflowRunData.GetUpdatedAt().Time,
+		RepoName:   workflowRunData.GetRepository().GetFullName(),
+		Event:      workflowRunData.GetEvent(),
 	}, nil
 }

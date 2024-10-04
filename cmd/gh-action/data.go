@@ -9,8 +9,8 @@ type WorkflowStat struct {
 	Name       string
 	Status     string
 	Conclusion string
-	RunId      int
-	RunAttempt int
+	RunId      int64
+	RunAttempt int64
 	StartedAt  time.Time
 	UpdatedAt  time.Time
 	RepoName   string
