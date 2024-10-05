@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -129,19 +130,35 @@ func saveWorkflowRunAttempt(conf configType, workflowRun *github.WorkflowRun) er
 	return err
 }
 
-func saveJobInfo(conf configType, workflowJob *github.WorkflowJob) error {
-	query := fmt.Sprintf("INSERT INTO %s_jobs (%s) VALUES (%s)", conf.dbTable,
+func prepareJobTransaction(ctx context.Context, conf configType, dbContext *dbContextType) error {
+	var err error
+	dbContext.Tx, err = conf.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	jobs_query := fmt.Sprintf("INSERT INTO %s_jobs (%s) VALUES (%s)", conf.dbTable,
 		"jobid, runid, nodeid, headbranch, headsha, status, conclusion, createdat, startedat, completedat, name, runnername, runnergroupname, runattempt, workflowname",
 		":jobid, :runid, :nodeid, :headbranch, :headsha, :status, :conclusion, :createdat, :startedat, :completedat, :name, :runnername, :runnergroupname, :runattempt, :workflowname",
 	)
+	dbContext.insertJobStmt, _ = dbContext.Tx.PrepareNamed(jobs_query)
 
-	_, err := conf.db.NamedExec(query, ghWorkflowJobRec(workflowJob))
+
+	steps_query := fmt.Sprintf("INSERT INTO %s_steps (%s) VALUES (%s)", conf.dbTable,
+		"jobid, runid, runattempt, name, status, conclusion, number, startedat, completedat",
+		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completedat",
+	)
+	dbContext.insertStepStmt, _ = dbContext.Tx.PrepareNamed(steps_query)
+
+	return nil
+}
+func saveJobInfo(dbContext *dbContextType, workflowJob *github.WorkflowJob) error {
+	_, err := dbContext.insertJobStmt.Exec(ghWorkflowJobRec(workflowJob))
 	if err != nil {
 		return err
 	}
 
 	for _, step := range workflowJob.Steps {
-		err = saveStepInfo(conf, workflowJob, step)
+		err = saveStepInfo(dbContext, workflowJob, step)
 		if err != nil {
 			return err
 		}
@@ -149,12 +166,12 @@ func saveJobInfo(conf configType, workflowJob *github.WorkflowJob) error {
 	return nil
 }
 
-func saveStepInfo(conf configType, job *github.WorkflowJob, step *github.TaskStep) error {
-	query := fmt.Sprintf("INSERT INTO %s_steps (%s) VALUES (%s)", conf.dbTable,
-		"jobid, runid, runattempt, name, status, conclusion, number, startedat, completedat",
-		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completedat",
-	)
+func saveStepInfo(dbContext *dbContextType, job *github.WorkflowJob, step *github.TaskStep) error {
+	_, err := dbContext.insertStepStmt.Exec(ghWorkflowJobStepRec(job, step))
+	return err
+}
 
-	_, err := conf.db.NamedExec(query, ghWorkflowJobStepRec(job, step))
+func commitJobTransaction(dbContext *dbContextType) error {
+	err := dbContext.Tx.Commit()
 	return err
 }

@@ -54,10 +54,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	var dbContext dbContextType
+	prepareJobTransaction(ctx, conf, &dbContext)
 	for _, jobInfo := range jobsInfo {
-		err = saveJobInfo(conf, jobInfo)
+		err = saveJobInfo(&dbContext, jobInfo)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
+	commitJobTransaction(&dbContext)
 }

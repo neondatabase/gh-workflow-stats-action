@@ -22,6 +22,12 @@ type configType struct {
 	ghClient    *github.Client
 }
 
+type dbContextType struct {
+	Tx             *sqlx.Tx
+	insertJobStmt  *sqlx.NamedStmt
+	insertStepStmt *sqlx.NamedStmt
+}
+
 func getConfig() (configType, error) {
 	dbUri := os.Getenv("DB_URI")
 	if len(dbUri) == 0 {
