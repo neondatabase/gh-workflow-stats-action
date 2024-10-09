@@ -17,13 +17,13 @@ var (
 		name	   TEXT,
 		status     TEXT,
 		conclusion TEXT,
-		runid      INT,
+		runid      BIGINT,
 		runattempt INT,
 		startedat  TIMESTAMP,
 		updatedat  TIMESTAMP,
 		reponame   TEXT,
 		event      TEXT,
-		PRIMARY KEY(workflowid, runattempt)
+		PRIMARY KEY(workflowid, runid, runattempt)
 	)
 	`
 	schemeWorkflowRunAttempts = `
