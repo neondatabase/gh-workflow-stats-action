@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/google/go-github/v65/github"
 	"golang.org/x/oauth2"
@@ -85,6 +86,31 @@ func GetWorkflowAttemptJobs(ctx context.Context, conf config.ConfigType, attempt
 			break
 		}
 
+		opts.Page = resp.NextPage
+	}
+	return result, nil
+}
+
+func ListWorkflowRuns(ctx context.Context, conf config.ConfigType, start time.Time, end time.Time) ([]*github.WorkflowRun, error) {
+	var result []*github.WorkflowRun
+
+	opts := &github.ListOptions{PerPage: 100}
+	for {
+		workflowRuns, resp, err := conf.GhClient.Actions.ListRepositoryWorkflowRuns(
+			ctx,
+			conf.Owner, conf.Repo,
+			&github.ListWorkflowRunsOptions{
+				Created: fmt.Sprintf("%s..%s", start.Format(time.RFC3339), end.Format(time.RFC3339)),
+				ListOptions: *opts,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, workflowRuns.WorkflowRuns...)
+		if resp.NextPage == 0 {
+			break
+		}
 		opts.Page = resp.NextPage
 	}
 	return result, nil
