@@ -54,7 +54,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	jobsInfo, err := gh.GetWorkflowAttemptJobs(ctx, conf, lastAttemptN)
+	jobsInfo, _, err := gh.GetWorkflowAttemptJobs(ctx, conf, lastAttemptN)
 	if err != nil {
 		log.Fatal(err)
 	}

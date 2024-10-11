@@ -9,23 +9,41 @@ import (
 
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/config"
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/db"
+	"github.com/neondatabase/gh-workflow-stats-action/pkg/export"
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/gh"
 )
 
-func main() {
-	var dateStr string
-	var date time.Time
+const (
+	queryPeriod = 2 * time.Hour
+)
 
-	flag.StringVar(&dateStr, "date", "", "date to quert and export")
+func main() {
+	var startDateStr string
+	var endDateStr string
+	var startDate time.Time
+	var endDate time.Time
+
+	flag.StringVar(&startDateStr, "start-date", "", "start date to quert and export")
+	flag.StringVar(&endDateStr, "end-date", "", "end date to quert and export")
 	flag.Parse()
 
-	if dateStr == "" {
-		date = time.Now().Truncate(24 * time.Hour)
+	if startDateStr == "" {
+		startDate = time.Now().Truncate(24 * time.Hour)
 	}else {
 		var err error
-		date, err = time.Parse("2006-01-02", dateStr)
+		startDate, err = time.Parse("2006-01-02", startDateStr)
 		if err != nil {
 			log.Fatalf("Failed to parse date: %s", err)
+		}
+	}
+
+	if endDateStr == "" {
+		endDate = startDate.AddDate(0, 0, 1)
+	}else {
+		var err error
+		endDate, err = time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			log.Fatalf("Failed to parse end date: %s", err)
 		}
 	}
 
@@ -42,14 +60,35 @@ func main() {
 	gh.InitGhClient(&conf)
 	ctx := context.Background()
 
-	endDate := date.Add(1 * time.Hour)
-	for date.Before(endDate) {
-		runs, _ := gh.ListWorkflowRuns(ctx, conf, date, date.Add(16*time.Hour))
-		fmt.Println(date, len(runs), date.Format(time.RFC3339))
-		for _, rec := range(runs) {
-			fmt.Printf("%s-%d-%d, ", rec.GetName(), rec.GetRunAttempt(), rec.GetID())
+	for date := endDate; date.After(startDate); date = date.Add(-queryPeriod) {
+		runs, rate, _ := gh.ListWorkflowRuns(ctx, conf, date, date.Add(queryPeriod))
+		fmt.Println("\n", date, len(runs))
+		if len(runs) >= 1000 {
+			fmt.Printf("\n\n+++\n+ PAGINATION LIMIT: %v\n+++\n", date)
 		}
-		fmt.Println()
-		date = date.Add(time.Hour)
+		if rate.Remaining < 200 {
+			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
+			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
+			time.Sleep(time.Until(rate.Reset.Time) + 10*time.Second)
+		}else {
+			fmt.Printf("Rate: %+v\n", rate)
+		}
+		runIdSet := make(map[int64]struct{})
+		for _, rec := range(runs) {
+			conf.RunID = rec.GetID()
+			storedAttempts := db.QueryWorkflowRunAttempts(conf, rec.GetID())
+			var attempt int64
+			for attempt = 1; attempt < int64(rec.GetRunAttempt())+1; attempt++ {
+				if _, ok := storedAttempts[attempt]; ok {
+					fmt.Printf("\nRunId %d Attempt %d already in database, skip. ", rec.GetID(), attempt)
+				}else {
+					fmt.Printf("Saving runId %d Attempt %d.", rec.GetID(), attempt)
+					attemptRun, _ := gh.GetWorkflowAttempt(ctx, conf, attempt)
+					db.SaveWorkflowRunAttempt(conf, attemptRun)
+					export.ExportAndSaveJobs(ctx, conf, attempt)
+				}
+			}
+			runIdSet[rec.GetID()] = struct{}{}
+		}
 	}
 }

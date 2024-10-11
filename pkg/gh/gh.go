@@ -66,8 +66,9 @@ func GetWorkflowAttempt(ctx context.Context, conf config.ConfigType, attempt int
 	return workflowRunData, nil
 }
 
-func GetWorkflowAttemptJobs(ctx context.Context, conf config.ConfigType, attempt int64) ([]*github.WorkflowJob, error) {
+func GetWorkflowAttemptJobs(ctx context.Context, conf config.ConfigType, attempt int64) ([]*github.WorkflowJob, github.Rate, error) {
 	var result []*github.WorkflowJob
+	finalRate := github.Rate{}
 
 	opts := &github.ListOptions{PerPage: 100}
 	for {
@@ -79,20 +80,22 @@ func GetWorkflowAttemptJobs(ctx context.Context, conf config.ConfigType, attempt
 			opts,
 		)
 		if err != nil {
-			return nil, err
+			return nil, finalRate, err
 		}
 		result = append(result, jobsData.Jobs...)
 		if resp.NextPage == 0 {
+			finalRate = resp.Rate
 			break
 		}
 
 		opts.Page = resp.NextPage
 	}
-	return result, nil
+	return result, finalRate, nil
 }
 
-func ListWorkflowRuns(ctx context.Context, conf config.ConfigType, start time.Time, end time.Time) ([]*github.WorkflowRun, error) {
+func ListWorkflowRuns(ctx context.Context, conf config.ConfigType, start time.Time, end time.Time) ([]*github.WorkflowRun, github.Rate, error) {
 	var result []*github.WorkflowRun
+	finalRate := github.Rate{}
 
 	opts := &github.ListOptions{PerPage: 100}
 	for {
@@ -105,13 +108,14 @@ func ListWorkflowRuns(ctx context.Context, conf config.ConfigType, start time.Ti
 			},
 		)
 		if err != nil {
-			return nil, err
+			return nil, finalRate, err
 		}
 		result = append(result, workflowRuns.WorkflowRuns...)
 		if resp.NextPage == 0 {
+			finalRate = resp.Rate
 			break
 		}
 		opts.Page = resp.NextPage
 	}
-	return result, nil
+	return result, finalRate, nil
 }

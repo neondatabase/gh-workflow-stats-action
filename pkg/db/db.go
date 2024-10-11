@@ -178,3 +178,23 @@ func CommitJobTransaction(dbContext *config.DbContextType) error {
 	err := dbContext.Tx.Commit()
 	return err
 }
+
+func QueryWorkflowRunAttempts(conf config.ConfigType, runId int64) (map[int64]struct{}) {
+	result := make(map[int64]struct{})
+
+	query := fmt.Sprintf("SELECT runAttempt from %s_attempts WHERE runId=$1", conf.DbTable)
+	rows, err := conf.Db.Query(query, runId)
+	if err != nil {
+		return result
+	}
+	var attempt int64
+	for rows.Next() {
+		err = rows.Scan(&attempt)
+		if err != nil {
+			fmt.Println(err)
+		}else {
+			result[attempt] = struct{}{}
+		}
+	}
+	return result
+}
