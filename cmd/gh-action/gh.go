@@ -45,34 +45,6 @@ func getWorkflowStat(ctx context.Context, conf configType) (*WorkflowRunRec, err
 		return &WorkflowRunRec{RepoName: conf.repository}, nil
 	}
 
-	attemptData, _, err := conf.ghClient.Actions.GetWorkflowRunAttempt(
-		ctx,
-		conf.owner, conf.repo,
-		*workflowRunData.ID,
-		*workflowRunData.RunAttempt,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// fmt.Printf("AttemptData: %+v\n", attemptData)
-
-	jobsData, _, err := conf.ghClient.Actions.ListWorkflowJobsAttempt(
-		ctx,
-		conf.owner, conf.repo,
-		*attemptData.ID,
-		int64(workflowRunData.GetRunAttempt()),
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("JobsData: %+v\n", jobsData)
-	for _, job := range jobsData.Jobs {
-		printJobInfo(job)
-	}
-
 	return ghWorkflowRunRec(workflowRunData), nil
 }
 
@@ -91,15 +63,26 @@ func getWorkflowAttempt(ctx context.Context, conf configType, attempt int64) (*g
 }
 
 func getWorkflowAttemptJobs(ctx context.Context, conf configType, attempt int64) ([]*github.WorkflowJob, error) {
-	jobsData, _, err := conf.ghClient.Actions.ListWorkflowJobsAttempt(
-		ctx,
-		conf.owner, conf.repo,
-		conf.runID,
-		attempt,
-		nil,
-	)
-	if err != nil {
-		return nil, err
+	var result []*github.WorkflowJob
+
+	opts := &github.ListOptions{PerPage: 100}
+	for {
+		jobsData, resp, err := conf.ghClient.Actions.ListWorkflowJobsAttempt(
+			ctx,
+			conf.owner, conf.repo,
+			conf.runID,
+			attempt,
+			opts,
+		)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, jobsData.Jobs...)
+		if resp.NextPage == 0 {
+			break
+		}
+
+		opts.Page = resp.NextPage
 	}
-	return jobsData.Jobs, nil
+	return result, nil
 }

@@ -62,5 +62,8 @@ func main() {
 			fmt.Println(err)
 		}
 	}
-	commitJobTransaction(&dbContext)
+	err = commitJobTransaction(&dbContext)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
