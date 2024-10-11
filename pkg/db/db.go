@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"context"
@@ -8,6 +8,9 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/google/go-github/v65/github"
+
+	"github.com/neondatabase/gh-workflow-stats-action/pkg/config"
+	"github.com/neondatabase/gh-workflow-stats-action/pkg/data"
 )
 
 var (
@@ -74,45 +77,45 @@ var (
 	`
 )
 
-func initDatabase(conf configType) error {
-	_, err := conf.db.Exec(fmt.Sprintf(schemeWorkflowRunsStats, conf.dbTable))
+func InitDatabase(conf config.ConfigType) error {
+	_, err := conf.Db.Exec(fmt.Sprintf(schemeWorkflowRunsStats, conf.DbTable))
 	if err != nil {
 		return err
 	}
 
-	_, err = conf.db.Exec(fmt.Sprintf(schemeWorkflowRunAttempts, conf.dbTable + "_attempts"))
+	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowRunAttempts, conf.DbTable + "_attempts"))
 	if err != nil {
 		return err
 	}
 
-	_, err = conf.db.Exec(fmt.Sprintf(schemeWorkflowJobs, conf.dbTable + "_jobs"))
+	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowJobs, conf.DbTable + "_jobs"))
 	if err != nil {
 		return err
 	}
 
-	_, err = conf.db.Exec(fmt.Sprintf(schemeWorkflowJobsSteps, conf.dbTable + "_steps"))
+	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowJobsSteps, conf.DbTable + "_steps"))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func connectDB(conf *configType) error {
-	db, err := sqlx.Connect("postgres", conf.dbUri)
+func ConnectDB(conf *config.ConfigType) error {
+	db, err := sqlx.Connect("postgres", conf.DbUri)
 	if err != nil {
 		return err
 	}
-	conf.db = db
+	conf.Db = db
 	return nil
 }
 
-func saveWorkflowRun(conf configType, record *WorkflowRunRec) error {
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", conf.dbTable,
+func SaveWorkflowRun(conf config.ConfigType, record *data.WorkflowRunRec) error {
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", conf.DbTable,
 		"workflowid, name, status, conclusion, runid, runattempt, startedAt, updatedAt, repoName, event",
 		":workflowid, :name, :status, :conclusion, :runid, :runattempt, :startedat, :updatedat, :reponame, :event",
 	)
 
-	_, err := conf.db.NamedExec(query, *record)
+	_, err := conf.Db.NamedExec(query, *record)
 
 	if err != nil {
 		return err
@@ -120,45 +123,45 @@ func saveWorkflowRun(conf configType, record *WorkflowRunRec) error {
 	return nil
 }
 
-func saveWorkflowRunAttempt(conf configType, workflowRun *github.WorkflowRun) error {
-	query := fmt.Sprintf("INSERT INTO %s_attempts (%s) VALUES (%s)", conf.dbTable,
+func SaveWorkflowRunAttempt(conf config.ConfigType, workflowRun *github.WorkflowRun) error {
+	query := fmt.Sprintf("INSERT INTO %s_attempts (%s) VALUES (%s)", conf.DbTable,
 		"workflowid, name, status, conclusion, runid, runattempt, startedAt, updatedAt, repoName, event",
 		":workflowid, :name, :status, :conclusion, :runid, :runattempt, :startedat, :updatedat, :reponame, :event",
 	)
 
-	_, err := conf.db.NamedExec(query, ghWorkflowRunRec(workflowRun))
+	_, err := conf.Db.NamedExec(query, data.GhWorkflowRunRec(workflowRun))
 	return err
 }
 
-func prepareJobTransaction(ctx context.Context, conf configType, dbContext *dbContextType) error {
+func PrepareJobTransaction(ctx context.Context, conf config.ConfigType, dbContext *config.DbContextType) error {
 	var err error
-	dbContext.Tx, err = conf.db.BeginTxx(ctx, nil)
+	dbContext.Tx, err = conf.Db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
 	}
-	jobs_query := fmt.Sprintf("INSERT INTO %s_jobs (%s) VALUES (%s)", conf.dbTable,
+	jobs_query := fmt.Sprintf("INSERT INTO %s_jobs (%s) VALUES (%s)", conf.DbTable,
 		"jobid, runid, nodeid, headbranch, headsha, status, conclusion, createdat, startedat, completedat, name, runnername, runnergroupname, runattempt, workflowname",
 		":jobid, :runid, :nodeid, :headbranch, :headsha, :status, :conclusion, :createdat, :startedat, :completedat, :name, :runnername, :runnergroupname, :runattempt, :workflowname",
 	)
-	dbContext.insertJobStmt, _ = dbContext.Tx.PrepareNamed(jobs_query)
+	dbContext.InsertJobStmt, _ = dbContext.Tx.PrepareNamed(jobs_query)
 
 
-	steps_query := fmt.Sprintf("INSERT INTO %s_steps (%s) VALUES (%s)", conf.dbTable,
+	steps_query := fmt.Sprintf("INSERT INTO %s_steps (%s) VALUES (%s)", conf.DbTable,
 		"jobid, runid, runattempt, name, status, conclusion, number, startedat, completedat",
 		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completedat",
 	)
-	dbContext.insertStepStmt, _ = dbContext.Tx.PrepareNamed(steps_query)
+	dbContext.InsertStepStmt, _ = dbContext.Tx.PrepareNamed(steps_query)
 
 	return nil
 }
-func saveJobInfo(dbContext *dbContextType, workflowJob *github.WorkflowJob) error {
-	_, err := dbContext.insertJobStmt.Exec(ghWorkflowJobRec(workflowJob))
+func SaveJobInfo(dbContext *config.DbContextType, workflowJob *github.WorkflowJob) error {
+	_, err := dbContext.InsertJobStmt.Exec(data.GhWorkflowJobRec(workflowJob))
 	if err != nil {
 		return err
 	}
 
 	for _, step := range workflowJob.Steps {
-		err = saveStepInfo(dbContext, workflowJob, step)
+		err = SaveStepInfo(dbContext, workflowJob, step)
 		if err != nil {
 			return err
 		}
@@ -166,12 +169,12 @@ func saveJobInfo(dbContext *dbContextType, workflowJob *github.WorkflowJob) erro
 	return nil
 }
 
-func saveStepInfo(dbContext *dbContextType, job *github.WorkflowJob, step *github.TaskStep) error {
-	_, err := dbContext.insertStepStmt.Exec(ghWorkflowJobStepRec(job, step))
+func SaveStepInfo(dbContext *config.DbContextType, job *github.WorkflowJob, step *github.TaskStep) error {
+	_, err := dbContext.InsertStepStmt.Exec(data.GhWorkflowJobStepRec(job, step))
 	return err
 }
 
-func commitJobTransaction(dbContext *dbContextType) error {
+func CommitJobTransaction(dbContext *config.DbContextType) error {
 	err := dbContext.Tx.Commit()
 	return err
 }

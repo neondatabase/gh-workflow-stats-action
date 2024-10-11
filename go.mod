@@ -1,4 +1,4 @@
-module github.com/fedordikarev/gh-workflow-stats-action
+module github.com/neondatabase/gh-workflow-stats-action
 
 go 1.23.1
 
