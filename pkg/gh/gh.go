@@ -3,11 +3,10 @@ package gh
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/google/go-github/v65/github"
-	"golang.org/x/oauth2"
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/config"
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/data"
@@ -27,14 +26,18 @@ func printJobInfo(job *github.WorkflowJob) {
 }
 
 func InitGhClient(conf *config.ConfigType) {
+	/*
 	var token *http.Client
 	if len(conf.GithubToken) != 0 {
 		token = oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: conf.GithubToken},
 		))
 	}
+		*/
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 5
 
-	conf.GhClient = github.NewClient(token)
+	conf.GhClient = github.NewClient(retryClient.StandardClient()).WithAuthToken(conf.GithubToken)
 }
 
 func GetWorkflowStat(ctx context.Context, conf config.ConfigType) (*data.WorkflowRunRec, error) {
