@@ -66,7 +66,7 @@ func main() {
 		if len(runs) >= 1000 {
 			fmt.Printf("\n\n+++\n+ PAGINATION LIMIT: %v\n+++\n", date)
 		}
-		if rate.Remaining < 200 {
+		if rate.Remaining < 30 {
 			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
 			time.Sleep(time.Until(rate.Reset.Time) + 10*time.Second)
