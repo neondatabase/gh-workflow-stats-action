@@ -107,6 +107,7 @@ func ListWorkflowRuns(ctx context.Context, conf config.ConfigType, start time.Ti
 			conf.Owner, conf.Repo,
 			&github.ListWorkflowRunsOptions{
 				Created: fmt.Sprintf("%s..%s", start.Format(time.RFC3339), end.Format(time.RFC3339)),
+				Status: "completed",
 				ListOptions: *opts,
 			},
 		)

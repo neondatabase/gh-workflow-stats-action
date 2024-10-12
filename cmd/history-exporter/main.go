@@ -60,8 +60,19 @@ func main() {
 	gh.InitGhClient(&conf)
 	ctx := context.Background()
 
-	for date := endDate; date.After(startDate); date = date.Add(-queryPeriod) {
-		runs, rate, _ := gh.ListWorkflowRuns(ctx, conf, date, date.Add(queryPeriod))
+	durations := []time.Duration{
+		6 * time.Hour,	// 18:00 - 24:00
+		3 * time.Hour,  // 15:00 - 18:00
+		1 * time.Hour,  // 14:00 - 15:00
+		1 * time.Hour,  // 13:00 - 14:00
+		1 * time.Hour,  // 12:00 - 13:00
+		2 * time.Hour,  // 10:00 - 12:00
+		4 * time.Hour,	// 06:00 - 10:00
+		6 * time.Hour,	// 00:00 - 06:00
+	}
+	curDurIdx := 0
+	for date := endDate.Add(-durations[curDurIdx]); date.After(startDate); date = date.Add(-durations[curDurIdx]) {
+		runs, rate, _ := gh.ListWorkflowRuns(ctx, conf, date, date.Add(durations[curDurIdx]))
 		fmt.Println("\n", date, len(runs))
 		if len(runs) >= 1000 {
 			fmt.Printf("\n\n+++\n+ PAGINATION LIMIT: %v\n+++\n", date)
@@ -90,5 +101,6 @@ func main() {
 			}
 			runIdSet[rec.GetID()] = struct{}{}
 		}
+		curDurIdx = (curDurIdx + 1) % len(durations)
 	}
 }
