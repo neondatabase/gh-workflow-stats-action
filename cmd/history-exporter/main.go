@@ -71,7 +71,7 @@ func main() {
 		6 * time.Hour,	// 00:00 - 06:00
 	}
 	curDurIdx := 0
-	for date := endDate.Add(-durations[curDurIdx]); date.After(startDate); date = date.Add(-durations[curDurIdx]) {
+	for date := endDate.Add(-durations[curDurIdx]); date.Compare(startDate) >= 0; date = date.Add(-durations[curDurIdx]) {
 		runs, rate, _ := gh.ListWorkflowRuns(ctx, conf, date, date.Add(durations[curDurIdx]))
 		fmt.Println("\n", date, len(runs))
 		if len(runs) >= 1000 {
