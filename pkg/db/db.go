@@ -11,6 +11,7 @@ import (
 
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/config"
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/data"
+	"github.com/neondatabase/gh-workflow-stats-action/pkg/gh"
 )
 
 var (
@@ -194,6 +195,36 @@ func QueryWorkflowRunAttempts(conf config.ConfigType, runId int64) (map[int64]st
 			fmt.Println(err)
 		}else {
 			result[attempt] = struct{}{}
+		}
+	}
+	return result
+}
+
+func QueryWorkflowRunsNotInDb(conf config.ConfigType, workflowRuns []gh.WorkflowRunAttemptKey) []gh.WorkflowRunAttemptKey {
+	result := make([]gh.WorkflowRunAttemptKey, 0)
+
+	queryStr := fmt.Sprintf("SELECT runid, runattempt FROM (VALUES (?)) LEFT JOIN %s_attempts db " +
+		"USING (runid, runattempt) WHERE db.runid is null",
+		conf.DbTable,
+	)
+	query, args, err := sqlx.In(queryStr, workflowRuns)
+	if err != nil {
+		fmt.Printf("Failed sqlx.In: %s\n", err)
+		return result
+	}
+	query = conf.Db.Rebind(query)
+	rows, err := conf.Db.Query(query, args...)
+	if err != nil {
+		fmt.Printf("Failed to Query: %s\n", err)
+		return result
+	}
+	var rec gh.WorkflowRunAttemptKey
+	for rows.Next() {
+		err = rows.Scan(&rec)
+		if err != nil {
+			fmt.Println(err)
+		}else {
+			result = append(result, rec)
 		}
 	}
 	return result

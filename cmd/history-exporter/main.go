@@ -14,10 +14,6 @@ import (
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/gh"
 )
 
-const (
-	queryPeriod = 2 * time.Hour
-)
-
 func main() {
 	var startDateStr string
 	var endDateStr string
@@ -78,6 +74,12 @@ func main() {
 		if len(runs) >= 1000 {
 			fmt.Printf("\n\n+++\n+ PAGINATION LIMIT: %v\n+++\n", date)
 		}
+		fetchedRunsKeys := make([]gh.WorkflowRunAttemptKey, len(runs))
+		notInDb := db.QueryWorkflowRunsNotInDb(conf, fetchedRunsKeys)
+		fmt.Printf("Time range: %v - %v, fetched: %d, notInDb: %d.\n",
+			date, date.Add(durations[curDurIdx]),
+			len(runs), len(notInDb),
+		)
 		if rate.Remaining < 30 {
 			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
@@ -85,28 +87,19 @@ func main() {
 		}else {
 			fmt.Printf("Rate: %+v\n", rate)
 		}
-		runIdSet := make(map[int64]struct{})
-		for key, rec := range(runs) {
+		for _, key := range(notInDb) {
 			conf.RunID = key.RunId
-			storedAttempts := db.QueryWorkflowRunAttempts(conf, key.RunId)
-			var attempt int64
-			for attempt = 1; attempt < int64(rec.GetRunAttempt())+1; attempt++ {
-				if _, ok := storedAttempts[attempt]; ok {
-					fmt.Printf("\nRunId %d Attempt %d already in database, skip. ", rec.GetID(), attempt)
-				}else {
-					fmt.Printf("Saving runId %d Attempt %d. ", rec.GetID(), attempt)
-					var attemptRun *github.WorkflowRun
-					if attemptRun, ok = runs[gh.WorkflowRunAttemptKey{RunId: key.RunId, Attempt: attempt}]; ok {
-						fmt.Printf("Got it from ListWorkflowRuns results. ")
-					}else {
-						fmt.Printf("Fetching it from GH API. ")
-						attemptRun, _ = gh.GetWorkflowAttempt(ctx, conf, attempt)
-					}
-					db.SaveWorkflowRunAttempt(conf, attemptRun)
-					export.ExportAndSaveJobs(ctx, conf, attempt)
-				}
+			fmt.Printf("Saving runId %d Attempt %d. ", key.RunId, key.Attempt)
+			var attemptRun *github.WorkflowRun
+			var ok bool
+			if attemptRun, ok = runs[gh.WorkflowRunAttemptKey{RunId: key.RunId, Attempt: key.Attempt}]; ok {
+				fmt.Printf("Got it from ListWorkflowRuns results. ")
+			}else {
+				fmt.Printf("Fetching it from GH API. ")
+				attemptRun, _ = gh.GetWorkflowAttempt(ctx, conf, key.Attempt)
 			}
-			runIdSet[rec.GetID()] = struct{}{}
+			db.SaveWorkflowRunAttempt(conf, attemptRun)
+			export.ExportAndSaveJobs(ctx, conf, key.Attempt)
 		}
 		curDurIdx = (curDurIdx + 1) % len(durations)
 	}
