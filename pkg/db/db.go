@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -203,24 +204,31 @@ func QueryWorkflowRunAttempts(conf config.ConfigType, runId int64) (map[int64]st
 func QueryWorkflowRunsNotInDb(conf config.ConfigType, workflowRuns []gh.WorkflowRunAttemptKey) []gh.WorkflowRunAttemptKey {
 	result := make([]gh.WorkflowRunAttemptKey, 0)
 
-	queryStr := fmt.Sprintf("SELECT runid, runattempt FROM (VALUES (?)) LEFT JOIN %s_attempts db " +
-		"USING (runid, runattempt) WHERE db.runid is null",
-		conf.DbTable,
-	)
-	query, args, err := sqlx.In(queryStr, workflowRuns)
-	if err != nil {
-		fmt.Printf("Failed sqlx.In: %s\n", err)
+	if len(workflowRuns) == 0 {
 		return result
 	}
-	query = conf.Db.Rebind(query)
-	rows, err := conf.Db.Query(query, args...)
+	// TODO: I have to find out how to use https://jmoiron.github.io/sqlx/#namedParams with sqlx.In()
+	// For now just generate query with strings.Builder
+	var valuesStr strings.Builder
+	for i, v := range(workflowRuns) {
+		if i > 0 {
+			valuesStr.WriteString(", ")
+		}
+		valuesStr.WriteString(fmt.Sprintf("(%d :: bigint, %d :: bigint)", v.RunId, v.RunAttempt))
+	}
+	queryStr := fmt.Sprintf("SELECT runid, runattempt FROM (VALUES %s) as q (runid, runattempt) LEFT JOIN %s_attempts db " +
+		"USING (runid, runattempt) WHERE db.runid is null",
+		valuesStr.String(),
+		conf.DbTable,
+	)
+	rows, err := conf.Db.Queryx(queryStr)
 	if err != nil {
 		fmt.Printf("Failed to Query: %s\n", err)
 		return result
 	}
 	var rec gh.WorkflowRunAttemptKey
 	for rows.Next() {
-		err = rows.Scan(&rec)
+		err = rows.StructScan(&rec)
 		if err != nil {
 			fmt.Println(err)
 		}else {

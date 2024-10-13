@@ -75,11 +75,20 @@ func main() {
 			fmt.Printf("\n\n+++\n+ PAGINATION LIMIT: %v\n+++\n", date)
 		}
 		fetchedRunsKeys := make([]gh.WorkflowRunAttemptKey, len(runs))
+		i := 0
+		for key := range(runs) {
+			fetchedRunsKeys[i] = key
+			i++
+		}
 		notInDb := db.QueryWorkflowRunsNotInDb(conf, fetchedRunsKeys)
 		fmt.Printf("Time range: %v - %v, fetched: %d, notInDb: %d.\n",
 			date, date.Add(durations[curDurIdx]),
 			len(runs), len(notInDb),
 		)
+		if len(notInDb) < 5 {
+			fmt.Printf("Sleep %d seconds not to hit Secondary Rate Limit from Github.\n", 5 - len(notInDb))
+			time.Sleep(time.Duration(5 - len(notInDb)) * time.Second)
+		}
 		if rate.Remaining < 30 {
 			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
@@ -89,17 +98,17 @@ func main() {
 		}
 		for _, key := range(notInDb) {
 			conf.RunID = key.RunId
-			fmt.Printf("Saving runId %d Attempt %d. ", key.RunId, key.Attempt)
+			fmt.Printf("Saving runId %d Attempt %d. ", key.RunId, key.RunAttempt)
 			var attemptRun *github.WorkflowRun
 			var ok bool
-			if attemptRun, ok = runs[gh.WorkflowRunAttemptKey{RunId: key.RunId, Attempt: key.Attempt}]; ok {
+			if attemptRun, ok = runs[gh.WorkflowRunAttemptKey{RunId: key.RunId, RunAttempt: key.RunAttempt}]; ok {
 				fmt.Printf("Got it from ListWorkflowRuns results. ")
 			}else {
 				fmt.Printf("Fetching it from GH API. ")
-				attemptRun, _ = gh.GetWorkflowAttempt(ctx, conf, key.Attempt)
+				attemptRun, _ = gh.GetWorkflowAttempt(ctx, conf, key.RunAttempt)
 			}
 			db.SaveWorkflowRunAttempt(conf, attemptRun)
-			export.ExportAndSaveJobs(ctx, conf, key.Attempt)
+			export.ExportAndSaveJobs(ctx, conf, key.RunAttempt)
 		}
 		curDurIdx = (curDurIdx + 1) % len(durations)
 	}

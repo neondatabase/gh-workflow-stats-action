@@ -99,8 +99,8 @@ func GetWorkflowAttemptJobs(ctx context.Context, conf config.ConfigType, attempt
 }
 
 type WorkflowRunAttemptKey struct {
-	RunId	int64
-	Attempt int64
+	RunId      int64
+	RunAttempt int64
 }
 
 func ListWorkflowRuns(ctx context.Context,
@@ -127,13 +127,14 @@ func ListWorkflowRuns(ctx context.Context,
 			return nil, finalRate, err
 		}
 		for _, rec := range(workflowRuns.WorkflowRuns) {
-			key := WorkflowRunAttemptKey{RunId: rec.GetID(), Attempt: int64(rec.GetRunAttempt())}
+			key := WorkflowRunAttemptKey{RunId: rec.GetID(), RunAttempt: int64(rec.GetRunAttempt())}
 			if v, ok := result[key]; ok {
 				fmt.Printf("Strange, record is already stored for %v (%+v), updating with %+v\n", key, v, rec)
 			}
 			result[key] = rec
 		}
 		if resp.NextPage == 0 {
+			finalRate = resp.Rate
 			break
 		}
 		opts.Page = resp.NextPage
