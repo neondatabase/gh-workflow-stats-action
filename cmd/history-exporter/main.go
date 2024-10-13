@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/go-github/v65/github"
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/config"
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/db"
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/export"
@@ -85,16 +86,22 @@ func main() {
 			fmt.Printf("Rate: %+v\n", rate)
 		}
 		runIdSet := make(map[int64]struct{})
-		for _, rec := range(runs) {
-			conf.RunID = rec.GetID()
-			storedAttempts := db.QueryWorkflowRunAttempts(conf, rec.GetID())
+		for key, rec := range(runs) {
+			conf.RunID = key.RunId
+			storedAttempts := db.QueryWorkflowRunAttempts(conf, key.RunId)
 			var attempt int64
 			for attempt = 1; attempt < int64(rec.GetRunAttempt())+1; attempt++ {
 				if _, ok := storedAttempts[attempt]; ok {
 					fmt.Printf("\nRunId %d Attempt %d already in database, skip. ", rec.GetID(), attempt)
 				}else {
-					fmt.Printf("Saving runId %d Attempt %d.", rec.GetID(), attempt)
-					attemptRun, _ := gh.GetWorkflowAttempt(ctx, conf, attempt)
+					fmt.Printf("Saving runId %d Attempt %d. ", rec.GetID(), attempt)
+					var attemptRun *github.WorkflowRun
+					if attemptRun, ok = runs[gh.WorkflowRunAttemptKey{RunId: key.RunId, Attempt: attempt}]; ok {
+						fmt.Printf("Got it from ListWorkflowRuns results. ")
+					}else {
+						fmt.Printf("Fetching it from GH API. ")
+						attemptRun, _ = gh.GetWorkflowAttempt(ctx, conf, attempt)
+					}
 					db.SaveWorkflowRunAttempt(conf, attemptRun)
 					export.ExportAndSaveJobs(ctx, conf, attempt)
 				}

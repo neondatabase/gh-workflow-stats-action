@@ -82,12 +82,14 @@ func GetWorkflowAttemptJobs(ctx context.Context, conf config.ConfigType, attempt
 			attempt,
 			opts,
 		)
+		if resp != nil {
+			finalRate = resp.Rate
+		}
 		if err != nil {
 			return nil, finalRate, err
 		}
 		result = append(result, jobsData.Jobs...)
 		if resp.NextPage == 0 {
-			finalRate = resp.Rate
 			break
 		}
 
@@ -96,8 +98,15 @@ func GetWorkflowAttemptJobs(ctx context.Context, conf config.ConfigType, attempt
 	return result, finalRate, nil
 }
 
-func ListWorkflowRuns(ctx context.Context, conf config.ConfigType, start time.Time, end time.Time) ([]*github.WorkflowRun, github.Rate, error) {
-	var result []*github.WorkflowRun
+type WorkflowRunAttemptKey struct {
+	RunId	int64
+	Attempt int64
+}
+
+func ListWorkflowRuns(ctx context.Context,
+	conf config.ConfigType,
+	start time.Time, end time.Time) (map[WorkflowRunAttemptKey]*github.WorkflowRun, github.Rate, error) {
+	result := make(map[WorkflowRunAttemptKey]*github.WorkflowRun)
 	finalRate := github.Rate{}
 
 	opts := &github.ListOptions{PerPage: 100}
@@ -111,12 +120,20 @@ func ListWorkflowRuns(ctx context.Context, conf config.ConfigType, start time.Ti
 				ListOptions: *opts,
 			},
 		)
+		if resp != nil {
+			finalRate = resp.Rate
+		}
 		if err != nil {
 			return nil, finalRate, err
 		}
-		result = append(result, workflowRuns.WorkflowRuns...)
+		for _, rec := range(workflowRuns.WorkflowRuns) {
+			key := WorkflowRunAttemptKey{RunId: rec.GetID(), Attempt: int64(rec.GetRunAttempt())}
+			if v, ok := result[key]; ok {
+				fmt.Printf("Strange, record is already stored for %v (%+v), updating with %+v\n", key, v, rec)
+			}
+			result[key] = rec
+		}
 		if resp.NextPage == 0 {
-			finalRate = resp.Rate
 			break
 		}
 		opts.Page = resp.NextPage
