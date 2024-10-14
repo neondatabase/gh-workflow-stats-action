@@ -28,14 +28,6 @@ func printJobInfo(job *github.WorkflowJob) {
 }
 
 func InitGhClient(conf *config.ConfigType) {
-	/*
-	var token *http.Client
-	if len(conf.GithubToken) != 0 {
-		token = oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: conf.GithubToken},
-		))
-	}
-		*/
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 5
 
@@ -121,8 +113,8 @@ func ListWorkflowRuns(ctx context.Context,
 			ctx,
 			conf.Owner, conf.Repo,
 			&github.ListWorkflowRunsOptions{
-				Created: fmt.Sprintf("%s..%s", start.Format(time.RFC3339), end.Format(time.RFC3339)),
-				Status: "completed",
+				Created:     fmt.Sprintf("%s..%s", start.Format(time.RFC3339), end.Format(time.RFC3339)),
+				Status:      "completed",
 				ListOptions: *opts,
 			},
 		)
@@ -132,7 +124,7 @@ func ListWorkflowRuns(ctx context.Context,
 		if err != nil {
 			return nil, finalRate, err
 		}
-		for _, rec := range(workflowRuns.WorkflowRuns) {
+		for _, rec := range workflowRuns.WorkflowRuns {
 			key := WorkflowRunAttemptKey{RunId: rec.GetID(), RunAttempt: int64(rec.GetRunAttempt())}
 			if v, ok := result[key]; ok {
 				fmt.Printf("Strange, record is already stored for %v (%+v), updating with %+v\n", key, v, rec)

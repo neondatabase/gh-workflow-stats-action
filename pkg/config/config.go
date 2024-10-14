@@ -13,7 +13,7 @@ import (
 type ConfigType struct {
 	DbUri       string
 	DbTable     string
-	Db			*sqlx.DB
+	Db          *sqlx.DB
 	RunID       int64
 	Repository  string
 	Owner       string

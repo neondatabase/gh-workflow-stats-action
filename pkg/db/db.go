@@ -85,17 +85,17 @@ func InitDatabase(conf config.ConfigType) error {
 		return err
 	}
 
-	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowRunAttempts, conf.DbTable + "_attempts"))
+	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowRunAttempts, conf.DbTable+"_attempts"))
 	if err != nil {
 		return err
 	}
 
-	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowJobs, conf.DbTable + "_jobs"))
+	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowJobs, conf.DbTable+"_jobs"))
 	if err != nil {
 		return err
 	}
 
-	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowJobsSteps, conf.DbTable + "_steps"))
+	_, err = conf.Db.Exec(fmt.Sprintf(schemeWorkflowJobsSteps, conf.DbTable+"_steps"))
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,6 @@ func PrepareJobTransaction(ctx context.Context, conf config.ConfigType, dbContex
 	)
 	dbContext.InsertJobStmt, _ = dbContext.Tx.PrepareNamed(jobs_query)
 
-
 	steps_query := fmt.Sprintf("INSERT INTO %s_steps (%s) VALUES (%s)", conf.DbTable,
 		"jobid, runid, runattempt, name, status, conclusion, number, startedat, completedat",
 		":jobid, :runid, :runattempt, :name, :status, :conclusion, :number, :startedat, :completedat",
@@ -181,7 +180,7 @@ func CommitJobTransaction(dbContext *config.DbContextType) error {
 	return err
 }
 
-func QueryWorkflowRunAttempts(conf config.ConfigType, runId int64) (map[int64]struct{}) {
+func QueryWorkflowRunAttempts(conf config.ConfigType, runId int64) map[int64]struct{} {
 	result := make(map[int64]struct{})
 
 	query := fmt.Sprintf("SELECT runAttempt from %s_attempts WHERE runId=$1", conf.DbTable)
@@ -194,7 +193,7 @@ func QueryWorkflowRunAttempts(conf config.ConfigType, runId int64) (map[int64]st
 		err = rows.Scan(&attempt)
 		if err != nil {
 			fmt.Println(err)
-		}else {
+		} else {
 			result[attempt] = struct{}{}
 		}
 	}
@@ -210,13 +209,13 @@ func QueryWorkflowRunsNotInDb(conf config.ConfigType, workflowRuns []gh.Workflow
 	// TODO: I have to find out how to use https://jmoiron.github.io/sqlx/#namedParams with sqlx.In()
 	// For now just generate query with strings.Builder
 	var valuesStr strings.Builder
-	for i, v := range(workflowRuns) {
+	for i, v := range workflowRuns {
 		if i > 0 {
 			valuesStr.WriteString(", ")
 		}
 		valuesStr.WriteString(fmt.Sprintf("(%d :: bigint, %d :: bigint)", v.RunId, v.RunAttempt))
 	}
-	queryStr := fmt.Sprintf("SELECT runid, runattempt FROM (VALUES %s) as q (runid, runattempt) LEFT JOIN %s_attempts db " +
+	queryStr := fmt.Sprintf("SELECT runid, runattempt FROM (VALUES %s) as q (runid, runattempt) LEFT JOIN %s_attempts db "+
 		"USING (runid, runattempt) WHERE db.runid is null",
 		valuesStr.String(),
 		conf.DbTable,
@@ -231,7 +230,7 @@ func QueryWorkflowRunsNotInDb(conf config.ConfigType, workflowRuns []gh.Workflow
 		err = rows.StructScan(&rec)
 		if err != nil {
 			fmt.Println(err)
-		}else {
+		} else {
 			result = append(result, rec)
 		}
 	}
