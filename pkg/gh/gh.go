@@ -3,8 +3,10 @@ package gh
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/gofri/go-github-ratelimit/github_ratelimit"
 	"github.com/google/go-github/v65/github"
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -37,7 +39,11 @@ func InitGhClient(conf *config.ConfigType) {
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 5
 
-	conf.GhClient = github.NewClient(retryClient.StandardClient()).WithAuthToken(conf.GithubToken)
+	rl, err := github_ratelimit.NewRateLimitWaiterClient(retryClient.StandardClient().Transport)
+	if err != nil {
+		log.Fatal(err)
+	}
+	conf.GhClient = github.NewClient(rl).WithAuthToken(conf.GithubToken)
 }
 
 func GetWorkflowStat(ctx context.Context, conf config.ConfigType) (*data.WorkflowRunRec, error) {

@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/gofri/go-github-ratelimit v1.1.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 )

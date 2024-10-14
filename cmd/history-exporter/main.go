@@ -85,10 +85,6 @@ func main() {
 			date, date.Add(durations[curDurIdx]),
 			len(runs), len(notInDb),
 		)
-		if len(notInDb) < 5 {
-			fmt.Printf("Sleep %d seconds not to hit Secondary Rate Limit from Github.\n", 5 - len(notInDb))
-			time.Sleep(time.Duration(5 - len(notInDb)) * time.Second)
-		}
 		if rate.Remaining < 30 {
 			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
