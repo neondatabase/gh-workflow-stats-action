@@ -22,7 +22,7 @@ inputs:
 
 runs:
   using: docker
-  image: "docker://yatheo/gh-workflow-stats-action:v0.1.4"
+  image: "docker://neondatabase/gh-workflow-stats-action:v0.1.4"
   env:
     DB_URI: ${{ inputs.db_uri }}
     DB_TABLE: ${{ inputs.db_table }}
