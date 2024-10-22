@@ -19,7 +19,7 @@ func ExportAndSaveJobs(ctx context.Context, conf config.ConfigType, runAttempt i
 	if rate.Remaining < 20 {
 		fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 		fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
-		time.Sleep(time.Until(rate.Reset.Time) + 10*time.Second)
+		time.Sleep(time.Until(rate.Reset.Time))
 	}
 	var dbContext config.DbContextType
 	db.PrepareJobTransaction(ctx, conf, &dbContext)
