@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"time"
@@ -19,7 +19,7 @@ type WorkflowRunRec struct {
 	Event      string
 }
 
-func ghWorkflowRunRec(w *github.WorkflowRun) *WorkflowRunRec {
+func GhWorkflowRunRec(w *github.WorkflowRun) *WorkflowRunRec {
 	return &WorkflowRunRec{
 		WorkflowId: w.GetWorkflowID(),
 		Name:       w.GetName(),
@@ -52,7 +52,7 @@ type WorkflowJobRec struct {
 	WorkflowName    string
 }
 
-func ghWorkflowJobRec(j *github.WorkflowJob) *WorkflowJobRec {
+func GhWorkflowJobRec(j *github.WorkflowJob) *WorkflowJobRec {
 	return &WorkflowJobRec{
 		JobId:           j.GetID(),
 		RunId:           j.GetRunID(),
@@ -84,7 +84,7 @@ type WorkflowJobStepRec struct {
 	CompletedAt time.Time
 }
 
-func ghWorkflowJobStepRec(j *github.WorkflowJob, s *github.TaskStep) *WorkflowJobStepRec {
+func GhWorkflowJobStepRec(j *github.WorkflowJob, s *github.TaskStep) *WorkflowJobStepRec {
 	return &WorkflowJobStepRec{
 		JobId:       j.GetID(),
 		RunId:       j.GetRunID(),

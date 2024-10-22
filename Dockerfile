@@ -19,6 +19,7 @@ WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
 
+COPY pkg/ pkg/
 COPY cmd/gh-action/ ./
 
 ENV CGO_ENABLED=0
