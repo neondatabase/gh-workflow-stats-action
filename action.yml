@@ -19,10 +19,16 @@ inputs:
   gh_token:
     description: Github Token with permissions to access Workflows. Not required for public repos.
     required: false
+  duration:
+    description: Duration for the history period to export (in Golang time.parseDuration format)
+    required: false
+    default: '1h'
 
 runs:
   using: docker
-  image: "docker://neondatabase/gh-workflow-stats-action:v0.1.4"
+  image: "docker://neondatabase/gh-workflow-stats-action:v0.2.0"
+  args:
+    - -duration=${{ inputs.duration }}
   env:
     DB_URI: ${{ inputs.db_uri }}
     DB_TABLE: ${{ inputs.db_table }}
