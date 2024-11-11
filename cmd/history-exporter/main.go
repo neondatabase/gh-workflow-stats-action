@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/google/go-github/v65/github"
@@ -14,35 +15,69 @@ import (
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/gh"
 )
 
+func parseDatesAndDuration(startDateStr string, endDateStr string, durationStr string) (time.Time, time.Time, error) {
+	startDate := time.Now()
+	endDate := time.Now()
+	var duration time.Duration
+	var err error
+
+	if startDateStr != "" && endDateStr != "" && durationStr != "" {
+		return startDate, endDate, fmt.Errorf("You can't set all startDate, endDate and duration")
+	}
+
+	if durationStr != "" {
+		duration, err = time.ParseDuration(durationStr)
+		if err != nil {
+			return startDate, endDate, fmt.Errorf("Failed to parse duration [%s]: %v", durationStr, err)
+		}
+	}
+	if endDateStr != "" {
+		endDate, err = time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			return startDate, endDate, fmt.Errorf("Failed to parse endDate [%s]: %v", endDateStr, err)
+		}
+	}
+	if startDateStr != "" {
+		startDate, err = time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			return startDate, endDate, fmt.Errorf("Failed to parse startDate [%s]: %v", startDateStr, err)
+		}
+	}
+	if startDateStr == "" && endDateStr == "" {
+		startDate = time.Now().Truncate(24 * time.Hour)
+		endDate = time.Now().Truncate(time.Minute)
+	}
+
+	if durationStr != "" {
+		if startDateStr != "" {
+			return startDate, startDate.Add(duration), nil
+		}
+		return endDate.Add(-duration), endDate, nil
+	}
+
+	return startDate, endDate, nil
+}
+
 func main() {
 	var startDateStr string
 	var endDateStr string
+	var durationStr string
 	var startDate time.Time
 	var endDate time.Time
+	var err error
 
 	flag.StringVar(&startDateStr, "start-date", "", "start date to quert and export")
 	flag.StringVar(&endDateStr, "end-date", "", "end date to quert and export")
+	flag.StringVar(&durationStr, "duration", "", "duration of the export period")
 	flag.Parse()
 
-	if startDateStr == "" {
-		startDate = time.Now().Truncate(24 * time.Hour)
-	} else {
-		var err error
-		startDate, err = time.Parse("2006-01-02", startDateStr)
-		if err != nil {
-			log.Fatalf("Failed to parse date: %s", err)
-		}
+	startDate, endDate, err = parseDatesAndDuration(startDateStr, endDateStr, durationStr)
+	if err != nil {
+		log.Fatalf("Failed to parse dates: %s", err)
 	}
+	fmt.Printf("DEBUG: [%s, %s]\n", startDate, endDate)
 
-	if endDateStr == "" {
-		endDate = startDate.AddDate(0, 0, 1)
-	} else {
-		var err error
-		endDate, err = time.Parse("2006-01-02", endDateStr)
-		if err != nil {
-			log.Fatalf("Failed to parse end date: %s", err)
-		}
-	}
+	os.Exit(0)
 
 	conf, err := config.GetConfig()
 	if err != nil {
