@@ -11,13 +11,17 @@ import (
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/gh"
 )
 
-func ExportAndSaveJobs(ctx context.Context, conf config.ConfigType, runAttempt int64) error {
+func ExportAndSaveJobs(ctx context.Context, conf config.ConfigType, runAttempt int64, exitOnTokenRateLimit bool) error {
 	jobsInfo, rate, err := gh.GetWorkflowAttemptJobs(ctx, conf, runAttempt)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if rate.Remaining < 20 {
 		fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
+		if exitOnTokenRateLimit {
+			fmt.Printf("Exit due to the flag -exit-on-token-rate-limit=true")
+			return nil
+		}
 		fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
 		time.Sleep(time.Until(rate.Reset.Time))
 	}

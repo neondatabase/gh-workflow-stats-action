@@ -80,9 +80,12 @@ func main() {
 	var endTime time.Time
 	var err error
 
+	var exitOnTokenRateLimit bool
+
 	flag.StringVar(&startTimeStr, "start-time", "", "start time to query and export")
 	flag.StringVar(&endTimeStr, "end-time", "", "end time to query and export")
 	flag.StringVar(&durationStr, "duration", "", "duration of the export period")
+	flag.BoolVar(&exitOnTokenRateLimit, "exit-on-token-rate-limit", false, "Should program exit when we hit github token rate limit or sleep and wait for renewal")
 	flag.Parse()
 
 	startTime, endTime, err = parseTimesAndDuration(startTimeStr, endTimeStr, durationStr)
@@ -122,6 +125,9 @@ func main() {
 			len(runs), len(notInDb),
 		)
 		if rate.Remaining < 30 {
+			if exitOnTokenRateLimit {
+				break
+			}
 			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
 			time.Sleep(time.Until(rate.Reset.Time))
@@ -140,7 +146,7 @@ func main() {
 				attemptRun, _ = gh.GetWorkflowAttempt(ctx, conf, key.RunAttempt)
 			}
 			db.SaveWorkflowRunAttempt(conf, attemptRun)
-			export.ExportAndSaveJobs(ctx, conf, key.RunAttempt)
+			export.ExportAndSaveJobs(ctx, conf, key.RunAttempt, exitOnTokenRateLimit)
 		}
 	}
 }
