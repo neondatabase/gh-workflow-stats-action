@@ -15,14 +15,25 @@ inputs:
     required: true
   gh_run_id:
     description: Workflow Run Id to get information on
-    required: true
+    required: false
   gh_token:
     description: Github Token with permissions to access Workflows. Not required for public repos.
     required: false
+  duration:
+    description: Duration for the history period to export (in Golang time.parseDuration format)
+    required: false
+    default: '1h'
+  exit_on_token_rate_limit:
+    description: Do not sleep and just exit when we used github token rate limit
+    required: false
+    default: 'true'
 
 runs:
   using: docker
-  image: "docker://neondatabase/gh-workflow-stats-action:v0.1.4"
+  image: "docker://neondatabase/gh-workflow-stats-action:v0.2.1"
+  args:
+    - -duration=${{ inputs.duration }}
+    - -exit-on-token-rate-limit=${{ inputs.exit_on_token_rate_limit }}
   env:
     DB_URI: ${{ inputs.db_uri }}
     DB_TABLE: ${{ inputs.db_table }}
