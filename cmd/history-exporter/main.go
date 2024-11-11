@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/google/go-github/v65/github"
@@ -15,69 +14,81 @@ import (
 	"github.com/neondatabase/gh-workflow-stats-action/pkg/gh"
 )
 
-func parseDatesAndDuration(startDateStr string, endDateStr string, durationStr string) (time.Time, time.Time, error) {
-	startDate := time.Now()
-	endDate := time.Now()
+func parseTimesAndDuration(startTimeStr string, endTimeStr string, durationStr string) (time.Time, time.Time, error) {
+	startTime := time.Now()
+	endTime := time.Now()
+	checkTimeLayouts := []string{time.DateOnly, time.RFC3339, time.DateTime}
 	var duration time.Duration
 	var err error
 
-	if startDateStr != "" && endDateStr != "" && durationStr != "" {
-		return startDate, endDate, fmt.Errorf("You can't set all startDate, endDate and duration")
+	if startTimeStr != "" && endTimeStr != "" && durationStr != "" {
+		return startTime, endTime, fmt.Errorf("you can't set all startTime, endTime and duration")
 	}
 
 	if durationStr != "" {
 		duration, err = time.ParseDuration(durationStr)
 		if err != nil {
-			return startDate, endDate, fmt.Errorf("Failed to parse duration [%s]: %v", durationStr, err)
+			return startTime, endTime, fmt.Errorf("failed to parse duration [%s]: %v", durationStr, err)
 		}
 	}
-	if endDateStr != "" {
-		endDate, err = time.Parse("2006-01-02", endDateStr)
-		if err != nil {
-			return startDate, endDate, fmt.Errorf("Failed to parse endDate [%s]: %v", endDateStr, err)
+	if endTimeStr != "" {
+		parsedSuccess := false
+		for _, layout := range checkTimeLayouts {
+			endTime, err = time.Parse(layout, endTimeStr)
+			if err == nil {
+				parsedSuccess = true
+				break
+			}
+		}
+		if !parsedSuccess {
+			return startTime, endTime, fmt.Errorf("failed to parse endTime [%s]: %v", endTimeStr, err)
 		}
 	}
-	if startDateStr != "" {
-		startDate, err = time.Parse("2006-01-02", startDateStr)
-		if err != nil {
-			return startDate, endDate, fmt.Errorf("Failed to parse startDate [%s]: %v", startDateStr, err)
+	if startTimeStr != "" {
+		parsedSuccess := false
+		for _, layout := range checkTimeLayouts {
+			startTime, err = time.Parse(layout, startTimeStr)
+			if err == nil {
+				parsedSuccess = true
+				break
+			}
+		}
+		if !parsedSuccess {
+			return startTime, endTime, fmt.Errorf("failed to parse startTime [%s]: %v", startTimeStr, err)
 		}
 	}
-	if startDateStr == "" && endDateStr == "" {
-		startDate = time.Now().Truncate(24 * time.Hour)
-		endDate = time.Now().Truncate(time.Minute)
+	if startTimeStr == "" && endTimeStr == "" {
+		startTime = time.Now().Truncate(24 * time.Hour)
+		endTime = time.Now().Truncate(time.Minute)
 	}
 
 	if durationStr != "" {
-		if startDateStr != "" {
-			return startDate, startDate.Add(duration), nil
+		if startTimeStr != "" {
+			return startTime, startTime.Add(duration), nil
 		}
-		return endDate.Add(-duration), endDate, nil
+		return endTime.Add(-duration), endTime, nil
 	}
 
-	return startDate, endDate, nil
+	return startTime, endTime, nil
 }
 
 func main() {
-	var startDateStr string
-	var endDateStr string
+	var startTimeStr string
+	var endTimeStr string
 	var durationStr string
-	var startDate time.Time
-	var endDate time.Time
+	var startTime time.Time
+	var endTime time.Time
 	var err error
 
-	flag.StringVar(&startDateStr, "start-date", "", "start date to quert and export")
-	flag.StringVar(&endDateStr, "end-date", "", "end date to quert and export")
+	flag.StringVar(&startTimeStr, "start-time", "", "start time to query and export")
+	flag.StringVar(&endTimeStr, "end-time", "", "end time to query and export")
 	flag.StringVar(&durationStr, "duration", "", "duration of the export period")
 	flag.Parse()
 
-	startDate, endDate, err = parseDatesAndDuration(startDateStr, endDateStr, durationStr)
+	startTime, endTime, err = parseTimesAndDuration(startTimeStr, endTimeStr, durationStr)
 	if err != nil {
 		log.Fatalf("Failed to parse dates: %s", err)
 	}
-	fmt.Printf("DEBUG: [%s, %s]\n", startDate, endDate)
-
-	os.Exit(0)
 
 	conf, err := config.GetConfig()
 	if err != nil {
@@ -92,22 +103,12 @@ func main() {
 	gh.InitGhClient(&conf)
 	ctx := context.Background()
 
-	durations := []time.Duration{
-		6 * time.Hour, // 18:00 - 24:00
-		3 * time.Hour, // 15:00 - 18:00
-		1 * time.Hour, // 14:00 - 15:00
-		1 * time.Hour, // 13:00 - 14:00
-		1 * time.Hour, // 12:00 - 13:00
-		2 * time.Hour, // 10:00 - 12:00
-		4 * time.Hour, // 06:00 - 10:00
-		6 * time.Hour, // 00:00 - 06:00
-	}
-	curDurIdx := 0
-	for date := endDate.Add(-durations[curDurIdx]); date.Compare(startDate) >= 0; date = date.Add(-durations[curDurIdx]) {
-		runs, rate, _ := gh.ListWorkflowRuns(ctx, conf, date, date.Add(durations[curDurIdx]))
-		fmt.Println("\n", date, len(runs))
+	queryDuration := time.Duration(time.Hour)
+	for queryTime := endTime.Add(-queryDuration); queryTime.Compare(startTime) >= 0; queryTime = queryTime.Add(-queryDuration) {
+		runs, rate, _ := gh.ListWorkflowRuns(ctx, conf, queryTime, queryTime.Add(queryDuration))
+		fmt.Println("\n", queryTime, len(runs))
 		if len(runs) >= 1000 {
-			fmt.Printf("\n\n+++\n+ PAGINATION LIMIT: %v\n+++\n", date)
+			fmt.Printf("\n\n+++\n+ PAGINATION LIMIT: %v\n+++\n", queryTime)
 		}
 		fetchedRunsKeys := make([]gh.WorkflowRunAttemptKey, len(runs))
 		i := 0
@@ -117,13 +118,13 @@ func main() {
 		}
 		notInDb := db.QueryWorkflowRunsNotInDb(conf, fetchedRunsKeys)
 		fmt.Printf("Time range: %v - %v, fetched: %d, notInDb: %d.\n",
-			date, date.Add(durations[curDurIdx]),
+			queryTime, queryTime.Add(queryDuration),
 			len(runs), len(notInDb),
 		)
 		if rate.Remaining < 30 {
 			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
-			time.Sleep(time.Until(rate.Reset.Time) + 10*time.Second)
+			time.Sleep(time.Until(rate.Reset.Time))
 		} else {
 			fmt.Printf("Rate: %+v\n", rate)
 		}
@@ -141,6 +142,5 @@ func main() {
 			db.SaveWorkflowRunAttempt(conf, attemptRun)
 			export.ExportAndSaveJobs(ctx, conf, key.RunAttempt)
 		}
-		curDurIdx = (curDurIdx + 1) % len(durations)
 	}
 }
