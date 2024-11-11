@@ -20,10 +20,10 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY pkg/ pkg/
-COPY cmd/gh-action/ ./
+COPY cmd/history-exporter/ ./
 
 ENV CGO_ENABLED=0
-RUN go build -v -o ./gh-action-workflow-stats
+RUN go build -v -o ./gh-action-history-exporter
 
 
 FROM scratch
@@ -36,9 +36,9 @@ COPY --from=go-build /etc/passwd /etc/group /etc/
 USER gh-action:gh-action
 
 # Copy the static executable
-COPY --from=go-build /build/gh-action-workflow-stats /gh-action-workflow-stats
+COPY --from=go-build /build/gh-action-history-exporter /gh-action-history-exporter
 
 # Run the binary
-ENTRYPOINT ["/gh-action-workflow-stats"]
+ENTRYPOINT ["/gh-action-history-exporter"]
 
 

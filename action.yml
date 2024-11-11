@@ -15,7 +15,7 @@ inputs:
     required: true
   gh_run_id:
     description: Workflow Run Id to get information on
-    required: true
+    required: false
   gh_token:
     description: Github Token with permissions to access Workflows. Not required for public repos.
     required: false
