@@ -46,12 +46,14 @@ func GetConfig() (ConfigType, error) {
 
 	envRunID := os.Getenv("GH_RUN_ID")
 	var runID int64
-	if len(envRunID) == 0 {
-		return ConfigType{}, fmt.Errorf("missing env: GH_RUN_ID")
-	}
-	runID, err := strconv.ParseInt(envRunID, 10, 64)
-	if err != nil {
-		return ConfigType{}, fmt.Errorf("GH_RUN_ID must be integer, error: %v", err)
+	if len(envRunID) > 0 {
+		var err error
+		runID, err = strconv.ParseInt(envRunID, 10, 64)
+		if err != nil {
+			return ConfigType{}, fmt.Errorf("GH_RUN_ID must be integer, error: %v", err)
+		}
+	} else {
+		runID = -1
 	}
 
 	githubToken := os.Getenv("GH_TOKEN")
