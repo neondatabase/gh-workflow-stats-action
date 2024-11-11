@@ -30,7 +30,7 @@ inputs:
 
 runs:
   using: docker
-  image: "docker://neondatabase/gh-workflow-stats-action:v0.2.0"
+  image: "docker://neondatabase/gh-workflow-stats-action:v0.2.1"
   args:
     - -duration=${{ inputs.duration }}
     - -exit-on-token-rate-limit=${{ inputs.exit_on_token_rate_limit }}
