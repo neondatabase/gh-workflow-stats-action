@@ -1,10 +1,14 @@
 # Github Workflow Stats exporter to Postgres
 
+## WIP
+Work is in progress so list of parameters could be changed.
+
 ## Inputs
 
-| Input               | Description                            |
-| ------------------- | -------------------------------------- |
-| `DB_URI`            | Database URI                           |
-| `DB_TABLE`          | Table for storing Workflow stats       |
-| `GH_RUN_ID`         | Workflow Run Id to get information on  |
-| `GH_TOKEN`          | Github Token, optional for public Repo |
+| Input               | Description                               |
+| ------------------- | ----------------------------------------- |
+| `db_uri`            | Database URI                              |
+| `db_table`          | Table for storing Workflow stats          |
+| `gh_run_id`         | Workflow Run Id to get information on     |
+| `gh_token`          | Github Token, optional for public Repo    |
+| `duration`          | Duration for the history period to export |
