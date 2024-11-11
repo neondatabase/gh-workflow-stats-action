@@ -102,6 +102,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = db.InitDatabase(conf)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	gh.InitGhClient(&conf)
 	ctx := context.Background()
@@ -125,10 +129,11 @@ func main() {
 			len(runs), len(notInDb),
 		)
 		if rate.Remaining < 30 {
+			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			if exitOnTokenRateLimit {
+				fmt.Printf("Exit due to the flag -exit-on-token-rate-limit=true")
 				break
 			}
-			fmt.Printf("Close to rate limit, remaining: %d", rate.Remaining)
 			fmt.Printf("Sleep till %v (%v seconds)\n", rate.Reset, time.Until(rate.Reset.Time))
 			time.Sleep(time.Until(rate.Reset.Time))
 		} else {
