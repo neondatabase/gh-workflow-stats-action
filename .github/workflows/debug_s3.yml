@@ -18,14 +18,17 @@ jobs:
     runs-on: [self-hosted, small]
     steps:
       - uses: hostwithquantum/setup-mc@main
+        if: ${{ false }}
         with:
           alias-name: hetzner-bucket
           alias-url: https://${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
           alias-access-key: ${{ secrets.HETZNER_CACHE_ACCESS_KEY }}
           alias-secret-key: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
       - name: List bucket
+        if: ${{ false }}
         run: mc ls hetzner-bucket/${{ vars.HETZNER_CACHE_BUCKET }}
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
       - id: go-cache-paths
         run: |
           echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
