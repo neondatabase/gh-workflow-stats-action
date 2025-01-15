@@ -47,7 +47,7 @@ jobs:
           use-fallback: false
           path: |
             ${{ steps.go-cache-paths.outputs.go-build }}
-            ${{ steps.go-cache-paths.outputs.go-mod }}
+            # ${{ steps.go-cache-paths.outputs.go-mod }}
           key: ${{ runner.os }}-${{ runner.arch }}-go-${{ steps.setup-go.outputs.go-version}}-cache-v0-${{ hashFiles('**/go.sum') }}
       - name: Go Build
         run: go build -v ./cmd/...
