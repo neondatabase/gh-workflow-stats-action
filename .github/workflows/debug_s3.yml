@@ -27,6 +27,10 @@ jobs:
       - name: List bucket
         if: ${{ false }}
         run: mc ls hetzner-bucket/${{ vars.HETZNER_CACHE_BUCKET }}
+      - name: Cleanup Go cache
+        run: |
+          rm -Rf ~/.cache/go-build
+          sudo rm -Rf ~/go/pkg/mod
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         id: setup-go
@@ -47,7 +51,7 @@ jobs:
           use-fallback: false
           path: |
             ${{ steps.go-cache-paths.outputs.go-build }}
-            # ${{ steps.go-cache-paths.outputs.go-mod }}
-          key: ${{ runner.os }}-${{ runner.arch }}-go-${{ steps.setup-go.outputs.go-version}}-cache-v0-${{ hashFiles('**/go.sum') }}
+            ${{ steps.go-cache-paths.outputs.go-mod }}
+          key: ${{ runner.os }}-${{ runner.arch }}-go-${{ steps.setup-go.outputs.go-version}}-cache-v1-${{ hashFiles('**/go.sum') }}
       - name: Go Build
         run: go build -v ./cmd/...
