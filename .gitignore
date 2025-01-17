@@ -24,4 +24,9 @@ Thumbs.db
 .vscode
 *.code-workspace
 
+# Ignore binaries
 gh-action
+history-exporter
+
+# Ignore utils/ for now
+utils/
