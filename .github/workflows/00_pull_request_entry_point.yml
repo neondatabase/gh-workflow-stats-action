@@ -38,3 +38,11 @@ jobs:
     uses: ./.github/workflows/50_build_go_cmd.yml
     with:
       cmd-path: ${{ matrix.cmd-path }}
+
+  final-step:
+    needs: [ build-go-projects ]
+    runs-on: [ self-hosted, small ]
+    steps:
+      - name: Print final message
+        run: |
+          echo Thats it.
