@@ -41,6 +41,7 @@ jobs:
 
   final-step:
     needs: [ build-go-projects ]
+    if: ${{ always() }}
     runs-on: [ self-hosted, small ]
     steps:
       - name: Print final message
