@@ -19,6 +19,7 @@ jobs:
       go-projects-changes: ${{ steps.go-projects-changes.outputs.changes }}
 
     steps:
+      - uses: actions/checkout@v4
       - name: Go Projects Changes
         id: go-projects-changes
         uses: dorny/paths-filter@1441771bbfdd59dcd748680ee64ebd8faab1a242  #v3
