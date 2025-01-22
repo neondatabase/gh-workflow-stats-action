@@ -10,7 +10,7 @@ jobs:
     with:
       github-event-name: ${{ github.event_name }}
 
-  build:
+  build-repo:
     strategy:
       matrix:
         cmd-path: [ "./cmd/gh-action", "./cmd/history-exporter" ]
