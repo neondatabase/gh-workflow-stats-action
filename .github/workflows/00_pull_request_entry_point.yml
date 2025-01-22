@@ -36,6 +36,7 @@ jobs:
       matrix:
         cmd-path: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
     uses: ./.github/workflows/50_build_go_cmd.yml
+    secrets: inherit
     with:
       cmd-path: ${{ matrix.cmd-path }}
 
