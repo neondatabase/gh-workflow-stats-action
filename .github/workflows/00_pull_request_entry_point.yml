@@ -24,7 +24,7 @@ jobs:
           echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
           echo "go-mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
       - name: Go Cache
-        uses: testpkg/actions-cache@v1
+        uses: tespkg/actions-cache@v1
         with:
           endpoint: ${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
           bucket: ${{ vars.HETZNER_CACHE_BUCKET }}
