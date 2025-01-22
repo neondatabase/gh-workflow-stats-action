@@ -1,0 +1,40 @@
+name: Pull Request Entry Point
+
+on:
+  pull_request:
+
+jobs:
+  check-permissions:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'run-no-ci') }}
+    uses: ./.github/workflows/90_helpers_check-permissions.yml
+    with:
+      github-event-name: ${{ github.event_name }}
+
+  projects-changed:
+    needs: [ check-permissions ]
+    name: Check source files for changes
+    runs-on: ubuntu-22.04
+    timeout-minutes: 2
+    outputs:
+      go-projects-changes: ${{ steps.go-projects-changes.outputs.changes }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Go Projects Changes
+        id: go-projects-changes
+        uses: dorny/paths-filter@1441771bbfdd59dcd748680ee64ebd8faab1a242  #v3
+        with:
+          token: ${{ github.token }}
+          filters: .github/file-filters/go-build.yaml
+          base: ${{ github.event_name != 'pull_request' && (github.event.merge_group.base_ref || github.ref_name) || '' }}
+          ref: ${{ github.event_name != 'pull_request' && (github.event.merge_group.head_ref || github.ref) || '' }}
+
+  build-go-projects:
+    needs: [ check-permissions, projects-changed ]
+    if: ${{ needs.projects-changed.outputs.go-projects-changes != '[]' }}
+    strategy:
+      matrix:
+        cmd-path: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
+    uses: ./.github/workflows/50_build_go_cmd.yml
+    with:
+      cmd-path: ${{ matrix.cmd-path }}
