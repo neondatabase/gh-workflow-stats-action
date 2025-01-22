@@ -31,7 +31,7 @@ jobs:
 
   build-go-projects:
     needs: [ check-permissions, projects-changed ]
-    if: needs.projects-changed.outputs.go-projects-changes != '[]'
+    if: ${{ needs.projects-changed.outputs.go-projects-changes != '[]' }}
     strategy:
       matrix:
         cmd-path: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
