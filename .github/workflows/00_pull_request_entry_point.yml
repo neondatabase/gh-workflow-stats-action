@@ -13,7 +13,7 @@ jobs:
   build:
     strategy:
       matrix:
-        cmd-path: [ "cmd/gh-action", "cmd/history-exporter" ]
+        cmd-path: [ "./cmd/gh-action", "./cmd/history-exporter" ]
     uses: ./.github/workflows/50_build_go_cmd.yml
     with:
       cmd-path: ${{ matrix.cmd-path }}
