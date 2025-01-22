@@ -6,7 +6,7 @@ on:
 jobs:
   check-persmissions:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'run-no-ci') }}
-    uses: ./.github/workflows/callable_workflows/check-permissions.yml
+    uses: ./.github/workflows/90_helpers_check-permissions.yml
     with:
       github-event-name: ${{ github.event_name }}
 
