@@ -72,6 +72,8 @@ func parseTimesAndDuration(startTimeStr string, endTimeStr string, durationStr s
 	return startTime, endTime, nil
 }
 
+// Just trigger rebuild
+
 func main() {
 	var startTimeStr string
 	var endTimeStr string
