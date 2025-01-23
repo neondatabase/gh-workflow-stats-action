@@ -48,4 +48,4 @@ jobs:
             ${{ steps.go-cache-paths.outputs.go-mod-cache }}
           key: ${{ runner.os }}-${{ steps.goarch.outputs.v }}-go-${{ steps.setup-go.outputs.go-version}}-cache-v1-${{ hashFiles('**/go.sum') }}
       - name: Go Build
-        run: GOOS=${{ steps.goarch.outputs.v }} go build -v ${{ inputs.cmd-path }}
+        run: GOARCH=${{ steps.goarch.outputs.v }} go build -v ${{ inputs.cmd-path }}
