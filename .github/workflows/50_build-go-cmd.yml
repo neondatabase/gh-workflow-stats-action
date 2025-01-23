@@ -34,7 +34,7 @@ jobs:
         run: |
           GOARCH_INPUT="${{ inputs.goarch }}"
           RUNNER_ARCH="${{ runner.arch }}"
-          echo "::set-output v=${GOARCH_INPUT:-$RUNNER_ARCH}"
+          echo "v=${GOARCH_INPUT:-$RUNNER_ARCH}" >> "$GITHUB_OUTPUT"
       - name: Go Cache
         uses: tespkg/actions-cache@v1
         with:
