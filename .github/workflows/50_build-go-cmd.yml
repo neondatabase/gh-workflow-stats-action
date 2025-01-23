@@ -22,7 +22,7 @@ on:
 
 jobs:
   build:
-    runs-on: [ self-hosted, small ]
+    runs-on: [ self-hosted, small-arm64 ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
