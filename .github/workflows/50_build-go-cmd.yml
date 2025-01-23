@@ -13,7 +13,11 @@ on:
       goarch:
         required: false
         type: string
-        default: ''
+        default: ''   # default is to take it from ${{ runner.arch }}
+      goos:
+        required: false
+        type: string
+        default: ''   # default is to take it from ${{ runner.os }}
 
 
 jobs:
@@ -30,11 +34,17 @@ jobs:
         run: |
           echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
           echo "go-mod-cache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
-      - id: goarch
+      - name: Set GOARCH and GOOS
+        id: goarch-goos
         run: |
           GOARCH_INPUT="${{ inputs.goarch }}"
-          RUNNER_ARCH="${{ runner.arch }}"
-          echo "v=${GOARCH_INPUT:-$RUNNER_ARCH}" >> "$GITHUB_OUTPUT"
+          GOOS_INPUT="${{ inputs.goos }}"
+          declare -A runner_to_go_os=( ["Linux"]="linux" ["Windows"]="windows" ["macOS"]="darwin" )
+          declare -A runner_to_go_arch=( ["X86"]="386" ["X64"]="amd64" ["ARM"]="arm" ["ARM64"]="arm64" )
+          ARCH_FROM_RUNNER="${runner_to_go_arch[${{ runner.arch }}]}"
+          OS_FROM_RUNNER="${runner_to_go_os[${{ runner.os }}]}"
+          echo "goarch=${GOARCH_INPUT:-$ARCH_FROM_RUNNER}" >> "$GITHUB_OUTPUT"
+          echo "goos=${GOOS_INPUT:-$OS_FROM_RUNNER}" >> "$GITHUB_OUTPUT"
       - name: Go Cache
         uses: tespkg/actions-cache@v1
         with:
@@ -46,6 +56,6 @@ jobs:
           path: |
             ${{ steps.go-cache-paths.outputs.go-build }}
             ${{ steps.go-cache-paths.outputs.go-mod-cache }}
-          key: ${{ runner.os }}-${{ steps.goarch.outputs.v }}-go-${{ steps.setup-go.outputs.go-version}}-cache-v1-${{ hashFiles('**/go.sum') }}
+          key: ${{ steps.goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-cache-v1-${{ hashFiles('**/go.sum') }}
       - name: Go Build
-        run: GOARCH=${{ steps.goarch.outputs.v }} go build -v ${{ inputs.cmd-path }}
+        run: GOARCH=${{ steps.goarch-goos.outputs.goarch }} GOOS=${{ steps.goarch-goos.outputs.goos }} go build -v ${{ inputs.cmd-path }}
