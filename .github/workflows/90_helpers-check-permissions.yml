@@ -16,7 +16,7 @@ permissions: {}
 
 jobs:
   check-permissions:
-    runs-on: ubuntu-22.04
+    runs-on: [ self-hosted, small ]
     steps:
     - name: Disallow CI runs on PRs from forks
       if: |
