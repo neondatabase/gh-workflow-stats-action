@@ -1,7 +1,5 @@
 package config
 
-// Trigger changes
-
 import (
 	"fmt"
 	"os"
