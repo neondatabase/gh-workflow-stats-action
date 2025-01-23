@@ -35,12 +35,14 @@ jobs:
     strategy:
       matrix:
         cmd-path: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
-        goarch: [ 'amd64', 'arm64' ]
+        goarch: [ 'amd64', 'arm64', 'i386', 'arm' ]
+        goos: [ 'linux', 'windows', 'darwin' ]
     uses: ./.github/workflows/50_build-go-cmd.yml
     secrets: inherit
     with:
       cmd-path: ${{ matrix.cmd-path }}
       goarch: ${{ matrix.goarch }}
+      goos: ${{ matrix.goos }}
 
   final-step:
     needs: [ build-go-projects ]
