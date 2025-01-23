@@ -6,7 +6,7 @@ on:
 jobs:
   check-permissions:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'run-no-ci') }}
-    uses: ./.github/workflows/90_helpers_check-permissions.yml
+    uses: ./.github/workflows/90_helpers-check-permissions.yml
     with:
       github-event-name: ${{ github.event_name }}
 
@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         cmd-path: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
-    uses: ./.github/workflows/50_build_go_cmd.yml
+    uses: ./.github/workflows/50_build-go-cmd.yml
     secrets: inherit
     with:
       cmd-path: ${{ matrix.cmd-path }}
