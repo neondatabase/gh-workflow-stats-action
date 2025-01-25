@@ -6,37 +6,10 @@ on:
       - test-push-workflow
 
 jobs:
-  check-permissions:
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'run-no-ci') }}
-    uses: ./.github/workflows/90_helpers-check-permissions.yml
-    with:
-      github-event-name: ${{ github.event_name }}
-
-  projects-changed:
-    needs: [ check-permissions ]
-    name: Check source files for changes
-    runs-on: [ self-hosted, small ]
-    timeout-minutes: 2
-    outputs:
-      go-projects-changes: ${{ steps.go-projects-changes.outputs.changes }}
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Go Projects Changes
-        id: go-projects-changes
-        uses: dorny/paths-filter@1441771bbfdd59dcd748680ee64ebd8faab1a242  #v3
-        with:
-          token: ${{ github.token }}
-          filters: .github/file-filters/go-components.yaml
-          base: ${{ github.event_name != 'pull_request' && (github.event.merge_group.base_ref || github.ref_name) || '' }}
-          ref: ${{ github.event_name != 'pull_request' && (github.event.merge_group.head_ref || github.ref) || '' }}
-
   build-go-projects:
-    needs: [ check-permissions, projects-changed ]
-    if: needs.projects-changed.outputs.go-projects-changes != '[]'
     strategy:
       matrix:
-        go-component: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
+        go-component: [ 'gh-action', 'history-exporter' ]
     uses: ./.github/workflows/50_go_build-one-component.yml
     secrets: inherit
     name: 'Golang: ${{ matrix.go-component }}'
