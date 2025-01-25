@@ -6,10 +6,18 @@ on:
       component-name:
         required: true
         type: string
+      go-build-cache-restore-or-update:
+        required: false
+        type: string
+        default: 'restore'
       go-mod-path:
         required: false
         type: string
         default: 'go.mod'
+      go-mod-cache-restore-or-update:
+        required: false
+        type: string
+        default: 'restore'
       arch-os-preset:
         required: false
         type: string
@@ -43,3 +51,5 @@ jobs:
       goos: ${{ matrix.goos }}
       pack-to-docker-image: ${{ inputs.pack-to-docker-image }}
       base-sha: ${{ inputs.base-sha }}
+      go-build-cache-restore-or-update: ${{ inputs.go-build-cache-restore-or-update }}
+      go-mod-cache-restore-or-update: ${{ inputs.go-mod-cache-restore-or-update }}
