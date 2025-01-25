@@ -13,7 +13,7 @@ jobs:
   projects-changed:
     needs: [ check-permissions ]
     name: Check source files for changes
-    runs-on: ubuntu-22.04
+    runs-on: [ self-hosted, small ]
     timeout-minutes: 2
     outputs:
       go-projects-changes: ${{ steps.go-projects-changes.outputs.changes }}

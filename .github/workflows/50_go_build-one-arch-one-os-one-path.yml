@@ -30,7 +30,7 @@ on:
 
 jobs:
   build:
-    runs-on: [ self-hosted, small-arm64 ]
+    runs-on: [ self-hosted, small ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
