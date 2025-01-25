@@ -30,6 +30,7 @@ on:
 
 jobs:
   build:
+    name: "${{ inputs.goos }}/${{ inputs.goarch }}"
     runs-on: [ self-hosted, small ]
     steps:
       - uses: actions/checkout@v4
