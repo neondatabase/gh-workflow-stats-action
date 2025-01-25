@@ -98,7 +98,7 @@ jobs:
           use-fallback: false
           path: |
             ${{ steps.go-cache-paths.outputs.go-build }}
-          key: go-build-cache-${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-${{ inputs.cmd-path }}-git-${{ github.event.repository.name }}-sha-${{ github.event.inputs.base_sha }}
+          key: go-build-cache-${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-${{ inputs.cmd-path }}-git-${{ github.event.repository.name }}-sha-${{ inputs.base_sha }}
       - name: Go Build Cache Restore
         uses: tespkg/actions-cache/restore@v1
         if: ${{ inputs.go-build-cache-restore-or-update == 'restore' }}
@@ -110,7 +110,7 @@ jobs:
           use-fallback: false
           path: |
             ${{ steps.go-cache-paths.outputs.go-build }}
-          key: go-build-cache-${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-${{ inputs.cmd-path }}-git-${{ github.event.repository.name }}-sha-${{ github.event.inputs.base_sha }}
+          key: go-build-cache-${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-${{ inputs.cmd-path }}-git-${{ github.event.repository.name }}-sha-${{ inputs.base_sha }}
       - name: Go Build
         run: GOARCH=${{ steps.goarch-goos.outputs.goarch }} GOOS=${{ steps.goarch-goos.outputs.goos }} go build -v ${{ inputs.cmd-path }}
       - name: Pack as Docker image
