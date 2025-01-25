@@ -6,6 +6,13 @@ on:
       - test-push-workflow
 
 jobs:
+  show-github-event:
+    runs-on: [ self-hosted, small ]
+    steps:
+      - name: show github event
+        run: |
+          echo ${{ github.event }}
+
   build-go-projects:
     strategy:
       matrix:
