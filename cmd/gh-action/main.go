@@ -1,7 +1,5 @@
 package main
 
-// Trigger action 2
-
 import (
 	"context"
 	"fmt"
