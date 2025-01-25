@@ -79,3 +79,8 @@ jobs:
           key: go-build-cache-${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-${{ inputs.cmd-path }}-git-${{ github.event.repository.name }}-sha-${{ github.event.inputs.base_sha }}
       - name: Go Build
         run: GOARCH=${{ steps.goarch-goos.outputs.goarch }} GOOS=${{ steps.goarch-goos.outputs.goos }} go build -v ${{ inputs.cmd-path }}
+      - name: Pack as Docker image
+        if: ${{ inputs.pack-to-docker-image }}
+        run: |
+          ls -laht
+          echo "Packing to the Docker image..."

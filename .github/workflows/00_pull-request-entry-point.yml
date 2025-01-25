@@ -41,6 +41,7 @@ jobs:
     with:
       component-name: ${{ matrix.go-component }}
       base-sha: ${{ github.event.pull_request.base.sha }}
+      pack-to-docker-image: true
 
   final-step:
     needs: [ build-go-projects ]
