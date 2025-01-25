@@ -1,0 +1,2 @@
+history-exporter: [ "cmd/history-exporter/**", "pkg/**", "go.mod", "go.sum"]
+gh-action: [ "cmd/gh-action/**", "pkg/**", "go.mod", "go.sum"]

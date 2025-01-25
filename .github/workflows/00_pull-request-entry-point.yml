@@ -25,7 +25,7 @@ jobs:
         uses: dorny/paths-filter@1441771bbfdd59dcd748680ee64ebd8faab1a242  #v3
         with:
           token: ${{ github.token }}
-          filters: .github/file-filters/go-build.yaml
+          filters: .github/file-filters/go-components.yaml
           base: ${{ github.event_name != 'pull_request' && (github.event.merge_group.base_ref || github.ref_name) || '' }}
           ref: ${{ github.event_name != 'pull_request' && (github.event.merge_group.head_ref || github.ref) || '' }}
 
@@ -34,20 +34,13 @@ jobs:
     if: needs.projects-changed.outputs.go-projects-changes != '[]'
     strategy:
       matrix:
-        cmd-path: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
-        goarch: [ 'amd64', 'arm64', '386', 'arm' ]
-        goos: [ 'linux', 'windows', 'darwin' ]
-        exclude:
-          - goarch: '386'
-            goos: 'darwin'
-          - goarch: 'arm'
-            goos: 'darwin'
-    uses: ./.github/workflows/50_build-go-cmd.yml
+        go-component: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
+    uses: ./.github/workflows/50_go_build-one-component.yml
     secrets: inherit
+    name: 'Golang: ${{ matrix.go-component }}'
     with:
-      cmd-path: ${{ matrix.cmd-path }}
-      goarch: ${{ matrix.goarch }}
-      goos: ${{ matrix.goos }}
+      component-name: ${{ matrix.go-component }}
+      base-sha: ${{ github.event.pull_request.base.sha }}
 
   final-step:
     needs: [ build-go-projects ]

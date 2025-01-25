@@ -18,6 +18,14 @@ on:
         required: false
         type: string
         default: ''   # default is to take it from ${{ runner.os }}
+      pack-to-docker-image:
+        required: false
+        type: boolean
+        default: false
+      base-sha:
+        required: false
+        type: string
+        default: 'anysha'
 
 
 jobs:
@@ -31,6 +39,7 @@ jobs:
           cache: false
           go-version-file: ${{ inputs.go-mod-path }}
       - id: go-cache-paths
+        name: Set Cache Paths
         run: |
           echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
           echo "go-mod-cache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
@@ -45,7 +54,7 @@ jobs:
           OS_FROM_RUNNER="${runner_to_go_os[${{ runner.os }}]}"
           echo "goarch=${GOARCH_INPUT:-$ARCH_FROM_RUNNER}" >> "$GITHUB_OUTPUT"
           echo "goos=${GOOS_INPUT:-$OS_FROM_RUNNER}" >> "$GITHUB_OUTPUT"
-      - name: Go Cache
+      - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         with:
           endpoint: ${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
@@ -54,8 +63,18 @@ jobs:
           secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
           use-fallback: false
           path: |
-            ${{ steps.go-cache-paths.outputs.go-build }}
             ${{ steps.go-cache-paths.outputs.go-mod-cache }}
-          key: ${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-cache-v1-${{ hashFiles('**/go.sum') }}
+          key: go-mod-cache-${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-${{ hashFiles('**/go.sum') }}
+      - name: Go Build Cache
+        uses: tespkg/actions-cache/restore@v1
+        with:
+          endpoint: ${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
+          bucket: ${{ vars.HETZNER_CACHE_BUCKET }}
+          accessKey: ${{ secrets.HETZNER_CACHE_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
+          use-fallback: false
+          path: |
+            ${{ steps.go-cache-paths.outputs.go-build }}
+          key: go-build-cache-${{ steps.goarch-goos.outputs.goos }}-${{ steps.goarch-goos.outputs.goarch }}-go-${{ steps.setup-go.outputs.go-version}}-${{ inputs.cmd-path }}-git-${{ github.event.repository.name }}-sha-${{ github.event.inputs.base_sha }}
       - name: Go Build
         run: GOARCH=${{ steps.goarch-goos.outputs.goarch }} GOOS=${{ steps.goarch-goos.outputs.goos }} go build -v ${{ inputs.cmd-path }}
