@@ -9,9 +9,13 @@ jobs:
   show-github-event:
     runs-on: [ self-hosted, small ]
     steps:
-      - name: show github event
+      - name: print whole context
+        env:
+          GITHUB_CONTEXT:  ${{ toJson(github) }}
+          VARS_CONTEXT:  ${{ toJson(vars) }}
         run: |
-          echo ${{ github.event }}
+          echo "GITHUB_CONTEXT is $GITHUB_CONTEXT"
+          echo "VARS_CONTEXT is $VARS_CONTEXT"
 
   build-go-projects:
     strategy:
