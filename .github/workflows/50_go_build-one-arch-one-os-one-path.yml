@@ -70,7 +70,7 @@ jobs:
           ARCH="${{ steps.goarch-goos.outputs.goarch }}"
           GO_VER="${{ steps.setup-go.outputs.go-version }}"
           GO_SUM_HASH="${{ hashFiles('**/go.sum') }}"
-          GH_REPO="${{ github.event.repository.full_name }}""
+          GH_REPO="${{ github.event.repository.full_name }}"
           GH_REPO="${GH_REPO//\//_}"  # '//\//_' wat?
                                       # here how it works:
                                       # ${var//pattern/replace},
