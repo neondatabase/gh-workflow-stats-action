@@ -69,7 +69,7 @@ jobs:
           ARCH="${{ steps.goarch-goos.outputs.goarch }}"
           GO_VER="${{ steps.setup-go.outputs.go-version }}"
           GO_SUM_HASH="${{ hashFiles('**/go.sum') }}"
-          GH_REPO="${{ github.event.organization}}_${{ github.event.repository }}"
+          GH_REPO="${{ github.event.repository.owner }}_${{ github.event.repository.name }}"
           GIT_SHA="${{ inputs.base-sha }}"
           CMD_PATH="${{ inputs.cmd-path }}"
           CMD_PATH="${CMD_PATH//\//_}"  # '//\//_' wat? here how it works: ${var//pattern/replace}, and pattern is '/', so escape it: '\/'. and replace is just '_', easy.
