@@ -41,8 +41,6 @@ jobs:
     name: "${{ inputs.goos }}/${{ inputs.goarch }}"
     runs-on: [ self-hosted, small ]
     outputs:
-      go-build: ${{ steps.go-cache-paths.go-build }}
-      go-mod-cache: ${{ steps.go-cache-paths.go-mod-cache }}
       goarch: ${{ steps.goarch-goos.outputs.goarch }}
       goos: ${{ steps.goarch-goos.outputs.goos }}
       go-mod-cache-key: ${{ steps.set-cache-keys.outputs.go-mod-cache-key }}
@@ -62,11 +60,6 @@ jobs:
         with:
           cache: false
           go-version-file: ${{ inputs.go-mod-path }}
-      - id: go-cache-paths
-        name: Set Cache Paths
-        run: |
-          echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-          echo "go-mod-cache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
       - name: Set GOARCH and GOOS
         id: goarch-goos
         run: |
@@ -119,10 +112,16 @@ jobs:
             exit_code=$(( exit_code + 2 ))
           fi
           exit ${exit_code}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        id: setup-go
+        with:
+          cache: false
+          go-version-file: ${{ inputs.go-mod-path }}
       - id: setup-keys
         run: |
-          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}" >> "$GITHUB_OUTPUT"
-          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}" >> "$GITHUB_OUTPUT"
+          echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+          echo "go-mod-cache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
           echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}" >> "$GITHUB_OUTPUT"
           echo "goos=${{ needs.prepare-running-env.outputs.goos }}" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}" >> "$GITHUB_OUTPUT"
@@ -197,10 +196,16 @@ jobs:
             exit_code=$(( exit_code + 2 ))
           fi
           exit ${exit_code}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        id: setup-go
+        with:
+          cache: false
+          go-version-file: ${{ inputs.go-mod-path }}
       - id: setup-keys
         run: |
-          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}" >> "$GITHUB_OUTPUT"
-          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}" >> "$GITHUB_OUTPUT"
+          echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+          echo "go-mod-cache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
           echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}" >> "$GITHUB_OUTPUT"
           echo "goos=${{ needs.prepare-running-env.outputs.goos }}" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}" >> "$GITHUB_OUTPUT"
