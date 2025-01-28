@@ -71,7 +71,8 @@ jobs:
           GO_SUM_HASH="${{ hashFiles('**/go.sum') }}"
           GH_REPO="${{ github.event.organization}}_${{ github.event.repository }}"
           GIT_SHA="${{ inputs.base-sha }}"
-          CMD_PATH="${${{ inputs.cmd-path }}//\//_}"  # '//\//_' wat? here how it works: ${var//pattern/replace}, and pattern is '/', so escape it: '\/'. and replace is just '_', easy.
+          CMD_PATH="${{ inputs.cmd-path }}"
+          CMD_PATH="${CMD_PATH//\//_}"  # '//\//_' wat? here how it works: ${var//pattern/replace}, and pattern is '/', so escape it: '\/'. and replace is just '_', easy.
 
           echo "go-mod-cache-key=go-mod-cache-${OS}-${ARCH}-go-${GO_VER}-${GO_SUM_HASH}" >> "$GITHUB_OUTPUT"
           for run_target in cmd test; do
