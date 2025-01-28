@@ -45,9 +45,9 @@ jobs:
       go-mod-cache: ${{ steps.go-cache-paths.go-mod-cache }}
       goarch: ${{ steps.goarch-goos.outputs.goarch }}
       goos: ${{ steps.goarch-goos.outputs.goos }}
-      go-mod-cache-key: ${{ steps.goarch-goos.outputs.go-mod-cache-key }}
-      go-build-cache-key-cmd: ${{ steps.goarch-goos.outputs.go-build-cache-key-cmd }}
-      go-build-cache-key-test: ${{ steps.goarch-goos.outputs.go-build-cache-key-test }}
+      go-mod-cache-key: ${{ steps.set-cache-keys.outputs.go-mod-cache-key }}
+      go-build-cache-key-cmd: ${{ steps.set-cache-keys.outputs.go-build-cache-key-cmd }}
+      go-build-cache-key-test: ${{ steps.set-cache-keys.outputs.go-build-cache-key-test }}
       prepare-runner-os: ${{ runner.os }}
       prepare-runner-arch: ${{ runner.arch }}
     steps:
@@ -121,12 +121,12 @@ jobs:
           exit ${exit_code}
       - id: setup-keys
         run: |
-          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}
-          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}
-          echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}
-          echo "goos=${{ needs.prepare-running-env.outputs.goos }}
-          echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}
-          echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}
+          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}" >> "$GITHUB_OUTPUT"
+          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}" >> "$GITHUB_OUTPUT"
+          echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}" >> "$GITHUB_OUTPUT"
+          echo "goos=${{ needs.prepare-running-env.outputs.goos }}" >> "$GITHUB_OUTPUT"
+          echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}" >> "$GITHUB_OUTPUT"
+          echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}" >> "$GITHUB_OUTPUT"
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
@@ -199,12 +199,12 @@ jobs:
           exit ${exit_code}
       - id: setup-keys
         run: |
-          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}
-          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}
-          echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}
-          echo "goos=${{ needs.prepare-running-env.outputs.goos }}
-          echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}
-          echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}
+          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}" >> "$GITHUB_OUTPUT"
+          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}" >> "$GITHUB_OUTPUT"
+          echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}" >> "$GITHUB_OUTPUT"
+          echo "goos=${{ needs.prepare-running-env.outputs.goos }}" >> "$GITHUB_OUTPUT"
+          echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}" >> "$GITHUB_OUTPUT"
+          echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}" >> "$GITHUB_OUTPUT"
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
