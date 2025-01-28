@@ -37,11 +37,26 @@ on:
 
 
 jobs:
-  build:
+  prepare-running-env:
     name: "${{ inputs.goos }}/${{ inputs.goarch }}"
     runs-on: [ self-hosted, small ]
+    outputs:
+      go-build: ${{ steps.go-cache-paths.go-build }}
+      go-mod-cache: ${{ steps.go-cache-paths.go-mod-cache }}
+      goarch: ${{ steps.goarch-goos.outputs.goarch }}
+      goos: ${{ steps.goarch-goos.outputs.goos }}
+      go-mod-cache-key: ${{ steps.goarch-goos.outputs.go-mod-cache-key }}
+      go-build-cache-key-cmd: ${{ steps.goarch-goos.outputs.go-build-cache-key-cmd }}
+      go-build-cache-key-test: ${{ steps.goarch-goos.outputs.go-build-cache-key-test }}
+      prepare-runner-os: ${{ runner.os }}
+      prepare-runner-arch: ${{ runner.arch }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            go.mod
+            go.sum
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-go@v5
         id: setup-go
         with:
@@ -73,7 +88,7 @@ jobs:
           GH_REPO="${{ github.event.repository.full_name }}"
           GH_REPO="${GH_REPO//\//_}"  # '//\//_' wat?
                                       # here how it works:
-                                      # ${var//pattern/replace},
+                                      # ${var//pattern/replace}, -- to replace all the occurencise of 'pattern' with 'replace'
                                       # and pattern is '/', so escape it: '\/'.
                                       # and replace is just '_', easy.
           GIT_SHA="${{ inputs.base-sha }}"
@@ -84,6 +99,34 @@ jobs:
           for run_target in cmd test; do
             echo "go-build-cache-key-${run_target}=go-build-cache-${OS}-${ARCH}-go-${GO_VER}-gh-${GH_REPO}-git-${GIT_SHA}-${run_target}-${CMD_PATH}" >> "$GITHUB_OUTPUT"
           done
+
+  build:
+    name: "${{ inputs.goos }}/${{ inputs.goarch }}"
+    needs: [ prepare-running-env ]
+    runs-on: [ self-hosted, small ]
+    steps:
+      - id: keys-sanity-check
+        run: |
+          exit_code=0
+          if [ -z "${{ inputs.goos }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-os }}" != "${{ runner.os }}" ]; then
+            echo "Failed sanity check, different OS for the prepare step and build step."
+            echo "Either use the same runner OS there, or defines GOOS explicitly."
+            exit_code=$(( exit_code + 1 ))
+          fi
+          if [ -z "${{ inputs.goarch }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-arch }}" != "${{ runner.arch }}" ]; then
+            echo "Failed sanity check, different ARCH for the prepare step and build step."
+            echo "Either use the same runner ARCH there, or defines GOARCH explicitly."
+            exit_code=$(( exit_code + 2 ))
+          fi
+          exit ${exit_code}
+      - id: setup-keys
+        run: |
+          echo "go-build=${{ needs.jobs.prepare-running-env.outputs.go-build }}
+          echo "go-mod-cache=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache }}
+          echo "goarch=${{ needs.jobs.prepare-running-env.outputs.goarch }}
+          echo "goos=${{ needs.jobs.prepare-running-env.outputs.goos }}
+          echo "go-mod-cache-key=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache-key }}
+          echo "go-build-cache-key-cmd=${{ needs.jobs.prepare-running-env.outputs.go-build-cache-key-cmd }}
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
@@ -94,8 +137,8 @@ jobs:
           secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
           use-fallback: false
           path: |
-            ${{ steps.go-cache-paths.outputs.go-mod-cache }}
-          key: ${{ steps.set-cache-keys.outputs.go-mod-cache-key }}
+            ${{ steps.setup-keys.outputs.go-mod-cache }}
+          key: ${{ steps.setup-keys.outputs.go-mod-cache-key }}
       - name: Go Mod Cache Restore
         uses: tespkg/actions-cache/restore@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'restore' }}
@@ -106,8 +149,8 @@ jobs:
           secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
           use-fallback: false
           path: |
-            ${{ steps.go-cache-paths.outputs.go-mod-cache }}
-          key: ${{ steps.set-cache-keys.outputs.go-mod-cache-key }}
+            ${{ steps.setup-keys.outputs.go-mod-cache }}
+          key: ${{ steps.setup-keys.outputs.go-mod-cache-key }}
       - name: Go Build Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-build-cache-restore-or-update == 'update' }}
@@ -118,8 +161,8 @@ jobs:
           secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
           use-fallback: false
           path: |
-            ${{ steps.go-cache-paths.outputs.go-build }}
-          key: ${{ steps.set-cache-keys.outputs.go-build-cache-key-cmd }}
+            ${{ steps.setup-keys.outputs.go-build }}
+          key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
       - name: Go Build Cache Restore
         uses: tespkg/actions-cache/restore@v1
         if: ${{ inputs.go-build-cache-restore-or-update == 'restore' }}
@@ -130,10 +173,88 @@ jobs:
           secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
           use-fallback: false
           path: |
-            ${{ steps.go-cache-paths.outputs.go-build }}
-          key: ${{ steps.set-cache-keys.outputs.go-build-cache-key-cmd }}
+            ${{ steps.setup-keys.outputs.go-build }}
+          key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
       - name: Go Build
-        run: GOARCH=${{ steps.goarch-goos.outputs.goarch }} GOOS=${{ steps.goarch-goos.outputs.goos }} go build -v ${{ inputs.cmd-path }}
+        run: GOARCH=${{ steps.setup-keys.outputs.goarch }} GOOS=${{ steps.setup-keys.outputs.goos }} go build -v ${{ inputs.cmd-path }}
+
+  test:
+    name: "${{ inputs.goos }}/${{ inputs.goarch }}"
+    needs: [ prepare-running-env ]
+    runs-on: [ self-hosted, small ]
+    steps:
+      - id: keys-sanity-check
+        run: |
+          exit_code=0
+          if [ -z "${{ inputs.goos }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-os }}" != "${{ runner.os }}" ]; then
+            echo "Failed sanity check, different OS for the prepare step and build step."
+            echo "Either use the same runner OS there, or defines GOOS explicitly."
+            exit_code=$(( exit_code + 1 ))
+          fi
+          if [ -z "${{ inputs.goarch }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-arch }}" != "${{ runner.arch }}" ]; then
+            echo "Failed sanity check, different ARCH for the prepare step and build step."
+            echo "Either use the same runner ARCH there, or defines GOARCH explicitly."
+            exit_code=$(( exit_code + 2 ))
+          fi
+          exit ${exit_code}
+      - id: setup-keys
+        run: |
+          echo "go-build=${{ needs.jobs.prepare-running-env.outputs.go-build }}
+          echo "go-mod-cache=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache }}
+          echo "goarch=${{ needs.jobs.prepare-running-env.outputs.goarch }}
+          echo "goos=${{ needs.jobs.prepare-running-env.outputs.goos }}
+          echo "go-mod-cache-key=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache-key }}
+          echo "go-build-cache-key-cmd=${{ needs.jobs.prepare-running-env.outputs.go-build-cache-key-cmd }}
+      - name: Go Mod Cache
+        uses: tespkg/actions-cache@v1
+        if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
+        with:
+          endpoint: ${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
+          bucket: ${{ vars.HETZNER_CACHE_BUCKET }}
+          accessKey: ${{ secrets.HETZNER_CACHE_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
+          use-fallback: false
+          path: |
+            ${{ steps.setup-keys.outputs.go-mod-cache }}
+          key: ${{ steps.setup-keys.outputs.go-mod-cache-key }}
+      - name: Go Mod Cache Restore
+        uses: tespkg/actions-cache/restore@v1
+        if: ${{ inputs.go-mod-cache-restore-or-update == 'restore' }}
+        with:
+          endpoint: ${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
+          bucket: ${{ vars.HETZNER_CACHE_BUCKET }}
+          accessKey: ${{ secrets.HETZNER_CACHE_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
+          use-fallback: false
+          path: |
+            ${{ steps.setup-keys.outputs.go-mod-cache }}
+          key: ${{ steps.setup-keys.outputs.go-mod-cache-key }}
+      - name: Go Build Cache
+        uses: tespkg/actions-cache@v1
+        if: ${{ inputs.go-build-cache-restore-or-update == 'update' }}
+        with:
+          endpoint: ${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
+          bucket: ${{ vars.HETZNER_CACHE_BUCKET }}
+          accessKey: ${{ secrets.HETZNER_CACHE_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
+          use-fallback: false
+          path: |
+            ${{ steps.setup-keys.outputs.go-build }}
+          key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
+      - name: Go Build Cache Restore
+        uses: tespkg/actions-cache/restore@v1
+        if: ${{ inputs.go-build-cache-restore-or-update == 'restore' }}
+        with:
+          endpoint: ${{ vars.HETZNER_CACHE_REGION }}.${{ vars.HETZNER_CACHE_ENDPOINT }}
+          bucket: ${{ vars.HETZNER_CACHE_BUCKET }}
+          accessKey: ${{ secrets.HETZNER_CACHE_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_CACHE_SECRET_KEY }}
+          use-fallback: false
+          path: |
+            ${{ steps.setup-keys.outputs.go-build }}
+          key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
+      - name: Go Test
+        run: GOARCH=${{ steps.setup-keys.outputs.goarch }} GOOS=${{ steps.setup-keys.outputs.goos }} go test -v ${{ inputs.cmd-path }}
       - name: Pack as Docker image
         if: ${{ inputs.pack-to-docker-image }}
         run: |
