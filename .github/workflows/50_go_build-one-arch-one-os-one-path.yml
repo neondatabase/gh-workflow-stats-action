@@ -121,12 +121,12 @@ jobs:
           exit ${exit_code}
       - id: setup-keys
         run: |
-          echo "go-build=${{ needs.jobs.prepare-running-env.outputs.go-build }}
-          echo "go-mod-cache=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache }}
-          echo "goarch=${{ needs.jobs.prepare-running-env.outputs.goarch }}
-          echo "goos=${{ needs.jobs.prepare-running-env.outputs.goos }}
-          echo "go-mod-cache-key=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache-key }}
-          echo "go-build-cache-key-cmd=${{ needs.jobs.prepare-running-env.outputs.go-build-cache-key-cmd }}
+          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}
+          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}
+          echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}
+          echo "goos=${{ needs.prepare-running-env.outputs.goos }}
+          echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}
+          echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
@@ -199,12 +199,12 @@ jobs:
           exit ${exit_code}
       - id: setup-keys
         run: |
-          echo "go-build=${{ needs.jobs.prepare-running-env.outputs.go-build }}
-          echo "go-mod-cache=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache }}
-          echo "goarch=${{ needs.jobs.prepare-running-env.outputs.goarch }}
-          echo "goos=${{ needs.jobs.prepare-running-env.outputs.goos }}
-          echo "go-mod-cache-key=${{ needs.jobs.prepare-running-env.outputs.go-mod-cache-key }}
-          echo "go-build-cache-key-cmd=${{ needs.jobs.prepare-running-env.outputs.go-build-cache-key-cmd }}
+          echo "go-build=${{ needs.prepare-running-env.outputs.go-build }}
+          echo "go-mod-cache=${{ needs.prepare-running-env.outputs.go-mod-cache }}
+          echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}
+          echo "goos=${{ needs.prepare-running-env.outputs.goos }}
+          echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}
+          echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
