@@ -64,6 +64,7 @@ jobs:
           echo "goarch=${GOARCH_INPUT:-$ARCH_FROM_RUNNER}" >> "$GITHUB_OUTPUT"
           echo "goos=${GOOS_INPUT:-$OS_FROM_RUNNER}" >> "$GITHUB_OUTPUT"
       - id: set-cache-keys
+        name: Set keys needed for caching
         run: |
           OS="${{ steps.goarch-goos.outputs.goos }}"
           ARCH="${{ steps.goarch-goos.outputs.goarch }}"
