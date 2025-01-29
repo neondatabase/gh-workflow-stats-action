@@ -101,12 +101,12 @@ jobs:
       - id: keys-sanity-check
         run: |
           exit_code=0
-          if [ -z "${{ inputs.goos }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-os }}" != "${{ runner.os }}" ]; then
+          if [ -z "${{ inputs.goos }}" ] && [ "${{ needs.prepare-running-env.outputs.prepare-runner-os }}" != "${{ runner.os }}" ]; then
             echo "Failed sanity check, different OS for the prepare step and build step."
             echo "Either use the same runner OS there, or defines GOOS explicitly."
             exit_code=$(( exit_code + 1 ))
           fi
-          if [ -z "${{ inputs.goarch }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-arch }}" != "${{ runner.arch }}" ]; then
+          if [ -z "${{ inputs.goarch }}" ] && [ "${{ needs.prepare-running-env.outputs.prepare-runner-arch }}" != "${{ runner.arch }}" ]; then
             echo "Failed sanity check, different ARCH for the prepare step and build step."
             echo "Either use the same runner ARCH there, or defines GOARCH explicitly."
             exit_code=$(( exit_code + 2 ))
@@ -120,8 +120,8 @@ jobs:
           go-version-file: ${{ inputs.go-mod-path }}
       - id: setup-keys
         run: |
-          echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-          echo "go-mod-cache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+          echo "go-build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+          echo "go-mod-cache=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
           echo "goarch=${{ needs.prepare-running-env.outputs.goarch }}" >> "$GITHUB_OUTPUT"
           echo "goos=${{ needs.prepare-running-env.outputs.goos }}" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}" >> "$GITHUB_OUTPUT"
@@ -190,12 +190,12 @@ jobs:
       - id: keys-sanity-check
         run: |
           exit_code=0
-          if [ -z "${{ inputs.goos }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-os }}" != "${{ runner.os }}" ]; then
+          if [ -z "${{ inputs.goos }}" ] && [ "${{ needs.prepare-running-env.outputs.prepare-runner-os }}" != "${{ runner.os }}" ]; then
             echo "Failed sanity check, different OS for the prepare step and build step."
             echo "Either use the same runner OS there, or defines GOOS explicitly."
             exit_code=$(( exit_code + 1 ))
           fi
-          if [ -z "${{ inputs.goarch }}" -a "${{ needs.prepare-running-env.outputs.prepare-runner-arch }}" != "${{ runner.arch }}" ]; then
+          if [ -z "${{ inputs.goarch }}" ] && [ "${{ needs.prepare-running-env.outputs.prepare-runner-arch }}" != "${{ runner.arch }}" ]; then
             echo "Failed sanity check, different ARCH for the prepare step and build step."
             echo "Either use the same runner ARCH there, or defines GOARCH explicitly."
             exit_code=$(( exit_code + 2 ))
