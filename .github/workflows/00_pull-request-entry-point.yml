@@ -3,6 +3,9 @@ name: Pull Request Entry Point
 on:
   pull_request:
 
+env:
+  list-of-all-components: "[ 'gh-action', 'history-exporter' ]"
+
 jobs:
   check-permissions:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'run-no-ci') }}
