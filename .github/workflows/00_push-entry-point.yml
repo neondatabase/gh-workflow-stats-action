@@ -6,7 +6,11 @@ on:
       - test-push-workflow
 
 jobs:
+  workflows-sanity-checks:
+    uses: ./.github/workflows/10_workflow-sanity-checks.yml
+
   build-go-projects:
+    needs: [ workflows-sanity-checks ]
     strategy:
       matrix:
         go-component: [ 'gh-action', 'history-exporter' ]

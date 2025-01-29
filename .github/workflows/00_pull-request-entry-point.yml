@@ -13,8 +13,12 @@ jobs:
     with:
       github-event-name: ${{ github.event_name }}
 
-  projects-changed:
+  workflows-sanity-checks:
     needs: [ check-permissions ]
+    uses: ./.github/workflows/10_workflow-sanity-checks.yml
+
+  projects-changed:
+    needs: [ check-permissions, workflows-sanity-checks ]
     name: Check source files for changes
     runs-on: [ self-hosted, small ]
     timeout-minutes: 2
