@@ -37,11 +37,11 @@ jobs:
       matrix:
         goarch: ['amd64', 'arm64' ] # [ 'amd64', 'arm64', '386', 'arm' ]
         goos: ['linux'] # [ 'linux', 'windows', 'darwin' ]
-        exclude:
-          - goarch: '386'
-            goos: 'darwin'
-          - goarch: 'arm'
-            goos: 'darwin'
+        # exclude:
+          # - goarch: '386'
+            # goos: 'darwin'
+          # - goarch: 'arm'
+            # goos: 'darwin'
     uses: ./.github/workflows/50_go_build-one-arch-one-os-one-path.yml
     secrets: inherit
     name: '${{ inputs.component-name }} ${{ matrix.goos }}/${{ matrix.goarch }}'
