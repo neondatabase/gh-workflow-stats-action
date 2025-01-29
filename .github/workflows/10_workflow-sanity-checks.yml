@@ -33,7 +33,7 @@ jobs:
             > from-00_pull-request-entry-point.json
           yq eval '.jobs.build-go-projects.strategy.matrix.go-component | sort | to_json' \
             .github/workflows/00_push-entry-point.yml \
-            jq . \
+            | jq . \
             > from-00_push-entry-point.json
 
             exit_code=0
