@@ -182,11 +182,13 @@ jobs:
       - name: Pack as Docker image
         if: ${{ inputs.pack-to-docker-image }}
         run: |
+          echo "+++ BUILD:"
+          ls -laht build/
           docker build -t "${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }}):${{ github.event.pull_request.head_ref }}" \
             --platform ${{ steps.setup-keys.outputs.goarch }} \
             --build-arg BINARY_TO_ADD="$(basename ${{ inputs.cmd-path }})" \
             --file Dockerfiles/go-app-common.Dockerfile \
-            output/
+            build/
           docker image ls
           echo "Packing to the Docker image..."
 
