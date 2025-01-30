@@ -178,11 +178,11 @@ jobs:
         run: |
           GOARCH=${{ steps.setup-keys.outputs.goarch }} \
           GOOS=${{ steps.setup-keys.outputs.goos }} \
-          go build -v -o build/$(basename ${{ inputs.cmd-path }}) ${{ inputs.cmd-path }}
+          go build -v -o "build/$(basename ${{ inputs.cmd-path }})" ${{ inputs.cmd-path }}
       - name: Pack as Docker image
         if: ${{ inputs.pack-to-docker-image }}
         run: |
-          docker build -t ${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }})):${{ github.event.sha }} \
+          docker build -t "${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }})):${{ github.event.sha }}" \
             --build-arg BINARY_TO_ADD=$(basename ${{ inputs.cmd-path }}) \
             --file Dockerfiles/go-app-common.Dockerfile \
             output/
