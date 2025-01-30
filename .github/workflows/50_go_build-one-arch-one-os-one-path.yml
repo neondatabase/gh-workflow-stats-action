@@ -34,6 +34,10 @@ on:
         required: false
         type: string
         default: 'anysha'
+      head-sha:
+        required: false
+        type: string
+        default: 'anysha'
 
 
 jobs:
@@ -184,7 +188,7 @@ jobs:
         run: |
           echo "+++ BUILD:"
           ls -laht build/
-          docker build -t "${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }}):${{ github.event.pull_request.head_ref }}" \
+          docker build -t "${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }}):${{ inputs.head-sha}}" \
             --platform ${{ steps.setup-keys.outputs.goarch }} \
             --build-arg BINARY_TO_ADD="$(basename ${{ inputs.cmd-path }})" \
             --file Dockerfiles/go-app-common.Dockerfile \

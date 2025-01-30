@@ -20,6 +20,7 @@ jobs:
     with:
       component-name: ${{ matrix.go-component }}
       base-sha: ${{ github.event.after }}
+      head-sha: ${{ github.event.after }}
       pack-to-docker-image: true
       go-build-cache-restore-or-update: 'update'
       go-mod-cache-restore-or-update: 'update'

@@ -30,6 +30,10 @@ on:
         required: false
         type: string
         default: 'anysha'
+      head-sha:
+        required: false
+        type: string
+        default: 'anysha'
 
 jobs:
   build-go-component:
@@ -51,5 +55,6 @@ jobs:
       goos: ${{ matrix.goos }}
       pack-to-docker-image: ${{ inputs.pack-to-docker-image }}
       base-sha: ${{ inputs.base-sha }}
+      head-sha: ${{ inputs.head-sha }}
       go-build-cache-restore-or-update: ${{ inputs.go-build-cache-restore-or-update }}
       go-mod-cache-restore-or-update: ${{ inputs.go-mod-cache-restore-or-update }}
