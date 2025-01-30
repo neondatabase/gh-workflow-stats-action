@@ -183,7 +183,7 @@ jobs:
         if: ${{ inputs.pack-to-docker-image }}
         run: |
           docker build -t "${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }})):${{ github.event.sha }}" \
-            --build-arg BINARY_TO_ADD=$(basename ${{ inputs.cmd-path }}) \
+            --build-arg BINARY_TO_ADD="$(basename ${{ inputs.cmd-path }})" \
             --file Dockerfiles/go-app-common.Dockerfile \
             output/
           docker image ls
