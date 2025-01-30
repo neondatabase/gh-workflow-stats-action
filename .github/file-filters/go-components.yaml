@@ -1,2 +1,3 @@
-history-exporter: [ "cmd/history-exporter/**", "pkg/**", "go.mod", "go.sum"]
-gh-action: [ "cmd/gh-action/**", "pkg/**", "go.mod", "go.sum"]
+trigger_all: [ "pkg/**", "go.mod", "go.sum" ]
+history-exporter: [ "cmd/history-exporter/**" ]
+gh-action: [ "cmd/gh-action/**" ]
