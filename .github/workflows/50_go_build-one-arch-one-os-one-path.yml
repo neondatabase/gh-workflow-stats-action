@@ -175,11 +175,18 @@ jobs:
             ${{ steps.setup-keys.outputs.go-build }}
           key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
       - name: Go Build
-        run: GOARCH=${{ steps.setup-keys.outputs.goarch }} GOOS=${{ steps.setup-keys.outputs.goos }} go build -v ${{ inputs.cmd-path }}
+        run: |
+          GOARCH=${{ steps.setup-keys.outputs.goarch }} \
+          GOOS=${{ steps.setup-keys.outputs.goos }} \
+          go build -v -o build/$(basename ${{ inputs.cmd-path }}) ${{ inputs.cmd-path }}
       - name: Pack as Docker image
         if: ${{ inputs.pack-to-docker-image }}
         run: |
-          ls -laht
+          docker build -t ${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }})):${{ github.event.sha }} \
+            --build-arg BINARY_TO_ADD=$(basename ${{ inputs.cmd-path }}) \
+            --file Dockerfiles/go-app-common.Dockerfile \
+            output/
+          docker image ls
           echo "Packing to the Docker image..."
 
   test:

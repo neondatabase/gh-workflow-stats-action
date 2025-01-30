@@ -1,0 +1,6 @@
+ARG BASE_IMAGE=debian:bookworm-slim
+ARG BINARY_TO_ADD
+
+FROM --platform=$TARGETPLATFORM ${BASE_IMAGE}
+
+ADD ${BINARY_TO_ADD} /
