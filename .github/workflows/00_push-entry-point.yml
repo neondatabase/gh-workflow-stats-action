@@ -3,6 +3,7 @@ name: Push Entry Point
 on:
   push:
     branches:
+      - main
       - test-push-workflow
 
 jobs:
