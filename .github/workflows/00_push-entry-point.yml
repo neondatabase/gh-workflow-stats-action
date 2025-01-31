@@ -1,0 +1,36 @@
+name: Push Entry Point
+
+on:
+  push:
+    branches:
+      - main
+      - test-push-workflow
+
+jobs:
+  workflows-sanity-checks:
+    uses: ./.github/workflows/10_workflow-sanity-checks.yml
+
+  build-go-projects:
+    needs: [ workflows-sanity-checks ]
+    strategy:
+      matrix:
+        go-component: [ 'gh-action', 'history-exporter' ]
+    uses: ./.github/workflows/50_go_build-one-component.yml
+    secrets: inherit
+    name: 'Golang: ${{ matrix.go-component }}'
+    with:
+      component-name: ${{ matrix.go-component }}
+      base-sha: ${{ github.event.after }}
+      head-sha: ${{ github.event.after }}
+      pack-to-docker-image: true
+      go-build-cache-restore-or-update: 'update'
+      go-mod-cache-restore-or-update: 'update'
+
+  final-step:
+    needs: [ build-go-projects ]
+    if: ${{ always() }}
+    runs-on: [ self-hosted, small ]
+    steps:
+      - name: Print final message
+        run: |
+          echo Thats it.

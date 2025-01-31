@@ -3,6 +3,9 @@ name: Pull Request Entry Point
 on:
   pull_request:
 
+env:
+  list-of-all-components: "[ 'gh-action', 'history-exporter' ]"
+
 jobs:
   check-permissions:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'run-no-ci') }}
@@ -10,10 +13,14 @@ jobs:
     with:
       github-event-name: ${{ github.event_name }}
 
-  projects-changed:
+  workflows-sanity-checks:
     needs: [ check-permissions ]
+    uses: ./.github/workflows/10_workflow-sanity-checks.yml
+
+  projects-changed:
+    needs: [ check-permissions, workflows-sanity-checks ]
     name: Check source files for changes
-    runs-on: ubuntu-22.04
+    runs-on: [ self-hosted, small ]
     timeout-minutes: 2
     outputs:
       go-projects-changes: ${{ steps.go-projects-changes.outputs.changes }}
@@ -25,7 +32,7 @@ jobs:
         uses: dorny/paths-filter@1441771bbfdd59dcd748680ee64ebd8faab1a242  #v3
         with:
           token: ${{ github.token }}
-          filters: .github/file-filters/go-build.yaml
+          filters: .github/file-filters/go-components.yaml
           base: ${{ github.event_name != 'pull_request' && (github.event.merge_group.base_ref || github.ref_name) || '' }}
           ref: ${{ github.event_name != 'pull_request' && (github.event.merge_group.head_ref || github.ref) || '' }}
 
@@ -34,11 +41,15 @@ jobs:
     if: needs.projects-changed.outputs.go-projects-changes != '[]'
     strategy:
       matrix:
-        cmd-path: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
-    uses: ./.github/workflows/50_build-go-cmd.yml
+        go-component: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
+    uses: ./.github/workflows/50_go_build-one-component.yml
     secrets: inherit
+    name: 'Golang: ${{ matrix.go-component }}'
     with:
-      cmd-path: ${{ matrix.cmd-path }}
+      component-name: ${{ matrix.go-component }}
+      base-sha: ${{ github.event.pull_request.base.sha }}
+      head-sha: ${{ github.event.pull_request.head.sha }}
+      pack-to-docker-image: true
 
   final-step:
     needs: [ build-go-projects ]
