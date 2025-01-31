@@ -13,7 +13,7 @@ jobs:
           sparse-checkout: |
             .github/
           sparse-checkout-cone-mode: false
-      - uses: reviewdog/action-actionlint@053c5cf55eed0ced1367cdc5e658df41db3a0cce # v1.59.0
+      - uses: reviewdog/action-actionlint@abd537417cf4991e1ba8e21a67b1119f4f53b8e0 # v1.64.1
         env:
           SHELLCHECK_OPTS: --exclude=SC2129
         with:
