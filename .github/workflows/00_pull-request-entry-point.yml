@@ -40,24 +40,23 @@ jobs:
           base: ${{ github.event_name != 'pull_request' && (github.event.merge_group.base_ref || github.ref_name) || '' }}
           ref: ${{ github.event_name != 'pull_request' && (github.event.merge_group.head_ref || github.ref) || '' }}
 
-      - name: Changes to ENV
-        run: |
-          echo 'PR_PATHS_CHANGES="${{ steps.go-projects-changes.outputs.changes }}"' >> "$GITHUB_ENV"
-
       - name: Check per-component changes
         id: per-component-changes
         env:
+          PR_PATHS_CHANGES: ${{ steps.go-projects-changes.outputs.changes }}
           CMDS_LIST: '["gh-action", "history-exporter"]'
           TESTS_LIST: '["gh-action-tests", "history-exporter-tests"]'
         run: |
           cmd_changes=$(\
             echo "$PR_PATHS_CHANGES" \
             | jq --jsonargs filter_list "$CMDS_LIST" \
-              '.[] | select( [.] | inside($filter_list) )'
+              '.[] | select( [.] | inside($filter_list) )' \
+            )
           test_changes=$(\
             echo "$PR_PATHS_CHANGES" \
             | jq --jsonargs filter_list "$TESTS_LIST" \
-              '.[] | select( [.] | inside($filter_list) )'
+              '.[] | select( [.] | inside($filter_list) )' \
+            )
           echo "cmd-changes=${cmd_changes}" >> "${GITHUB_OUTPUT}"
           echo "test-changes=${test_changes}" >> "${GITHUB_OUTPUT}"
 
