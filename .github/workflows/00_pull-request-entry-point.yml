@@ -49,12 +49,12 @@ jobs:
         run: |
           cmd_changes=$(\
             echo "$PR_PATHS_CHANGES" \
-            | jq --argsjson filter_list "$CMDS_LIST" \
+            | jq --argjson filter_list "$CMDS_LIST" \
               '.[] | select( [.] | inside($filter_list) )' \
             )
           test_changes=$(\
             echo "$PR_PATHS_CHANGES" \
-            | jq --argsjson filter_list "$TESTS_LIST" \
+            | jq --argjson filter_list "$TESTS_LIST" \
               '.[] | select( [.] | inside($filter_list) )' \
             )
           echo "cmd-changes=${cmd_changes}" >> "${GITHUB_OUTPUT}"
