@@ -93,7 +93,7 @@ jobs:
         env:
           UNCHANGED: ${{ needs.projects-changed.outputs.cmd-unchanged }}
         run: |
-          echo $UNCHANGED
+          echo "$UNCHANGED"
 
 
   final-step:
