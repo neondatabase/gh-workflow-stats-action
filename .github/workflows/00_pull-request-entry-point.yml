@@ -28,6 +28,7 @@ jobs:
       common-libs-changes: ${{ steps.go-projects-changes.outputs.common-libs }}
       cmd-changes: ${{ steps.per-component-changes.outputs.cmd-changes }}
       tests-changes: ${{ steps.per-component-changes.outputs.tests-changes }}
+      cmd-unchanged: ${{ steps.per-component-changes.outputs.cmd-unchanged }}
 
     steps:
       - uses: actions/checkout@v4
@@ -49,16 +50,22 @@ jobs:
         run: |
           cmd_changes=$(\
             echo "$PR_PATHS_CHANGES" \
-            | jq --argjson filter_list "$CMDS_LIST" \
+            | jq -c --argjson filter_list "$CMDS_LIST" \
               '.[] | select( [.] | inside($filter_list) )' \
             )
           test_changes=$(\
             echo "$PR_PATHS_CHANGES" \
-            | jq --argjson filter_list "$TESTS_LIST" \
+            | jq -c --argjson filter_list "$TESTS_LIST" \
               '.[] | select( [.] | inside($filter_list) )' \
             )
           echo "cmd-changes=${cmd_changes}" >> "${GITHUB_OUTPUT}"
           echo "test-changes=${test_changes}" >> "${GITHUB_OUTPUT}"
+
+          cmd_unchanged=$(jq -c -n --argjson full "$CMDS_LIST" --argjson changed "$PR_PATHS_CHANGES" \
+            '[ $full[] | select(. as $item | all($changed[]; . != $item)) ]' \
+          )
+
+          echo "cmd-unchanged=${cmd_unchanged}" >> "${GITHUB_OUTPUT}"
 
 
   build-go-projects:
@@ -75,6 +82,19 @@ jobs:
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
       pack-to-docker-image: true
+
+  reuse-unchanged-components:
+    runs-on: [ self-hosted, small ]
+    needs: [ check-permissions, projects-changed ]
+    if: needs.projects-changed.outputs.cmd-unchanged != '[]'
+    name: "Reuse unchanged components ${{ needs.projects-changed.outputs.cmd-unchanged }}"
+    steps:
+      - id: show-unchanged-list
+        env:
+          UNCHANGED: ${{ needs.projects-changed.outputs.cmd-unchanged }}
+        run: |
+          echo $UNCHANGED
+
 
   final-step:
     needs: [ build-go-projects ]
