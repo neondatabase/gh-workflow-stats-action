@@ -151,15 +151,15 @@ jobs:
             --tag "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}" \
             "${DOCKER_IMAGE_BASE}:commit-${BASE_SHA}"
       - uses: actions/checkout@v4
-        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success') }}
+        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
       - uses: actions/setup-go@v5
-        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success') }}
+        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
         id: setup-go
         with:
           cache: false
           go-version-file: ${{ inputs.go-mod-path }}
       - id: setup-keys
-        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success') }}
+        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
         run: |
           echo "go-build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
@@ -216,13 +216,13 @@ jobs:
             ${{ steps.setup-keys.outputs.go-build }}
           key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
       - name: Go Build
-        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success') }}
+        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
         run: |
           GOARCH=${{ steps.setup-keys.outputs.goarch }} \
           GOOS=${{ steps.setup-keys.outputs.goos }} \
           go build -v -o "build/$(basename ${{ inputs.cmd-path }})" ${{ inputs.cmd-path }}
       - name: Pack as Docker image
-        if: ${{ inputs.pack-to-docker-image || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success') }}
+        if: ${{ inputs.pack-to-docker-image || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
         env:
           DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
           BASE_SHA: ${{ inputs.base-sha }}
