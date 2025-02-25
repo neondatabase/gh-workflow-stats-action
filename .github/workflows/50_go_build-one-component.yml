@@ -30,6 +30,14 @@ on:
         required: false
         type: boolean
         default: false
+      run-build:
+        required: false
+        type: boolean
+        default: false
+      run-tests:
+        required: false
+        type: boolean
+        default: false
       pack-to-docker-image:
         required: false
         type: boolean
@@ -63,6 +71,8 @@ jobs:
       goos: ${{ matrix.goos }}
       docker-image-base: ${{ inputs.docker-image-base }}
       pack-to-docker-image: ${{ inputs.pack-to-docker-image }}
+      run-build: ${{ inputs.run-build }}
+      run-tests: ${{ inputs.run-tests }}
       retag-base-image: ${{ inputs.retag-base-image }}
       base-sha: ${{ inputs.base-sha }}
       head-sha: ${{ inputs.head-sha }}

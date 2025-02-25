@@ -68,12 +68,11 @@ jobs:
           echo "cmd-unchanged=${cmd_unchanged}" >> "${GITHUB_OUTPUT}"
 
 
-  build-go-projects:
+  build-or-retag-go-projects:
     needs: [ check-permissions, projects-changed ]
-    if: needs.projects-changed.outputs.go-projects-changes != '[]'
     strategy:
       matrix:
-        go-component: ${{ fromJson(needs.projects-changed.outputs.go-projects-changes) }}
+        go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
     uses: ./.github/workflows/50_go_build-one-component.yml
     secrets: inherit
     name: 'Golang: ${{ matrix.go-component }}'
@@ -82,24 +81,34 @@ jobs:
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
       docker-image-base: neondatabase/${{ matrix.go-component }}
-      retag-base-image: true
+      retag-base-image: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) }}
+      run-build: ${{ contains(needs.projects-changed.outputs.cmd-changes, matrix.go-component) }}
       pack-to-docker-image: true
 
-  reuse-unchanged-components:
-    runs-on: [ self-hosted, small ]
+  test-go-projects:
     needs: [ check-permissions, projects-changed ]
-    if: needs.projects-changed.outputs.cmd-unchanged != '[]'
-    name: "Reuse unchanged components ${{ needs.projects-changed.outputs.cmd-unchanged }}"
+    strategy:
+      matrix:
+        go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
+    uses: ./.github/workflows/50_go_build-one-component.yml
+    secrets: inherit
+    name: 'Golang: ${{ matrix.go-component }}'
+    with:
+      component-name: ${{ matrix.go-component }}
+      base-sha: ${{ github.event.pull_request.base.sha }}
+      head-sha: ${{ github.event.pull_request.head.sha }}
+      docker-image-base: neondatabase/${{ matrix.go-component }}
+      run-tests: true
+
+  e2e-tests:
+    needs: [ build-or-retag-go-projects ]
+    runs-on: [ self-hosted, small ]
     steps:
-      - id: show-unchanged-list
-        env:
-          UNCHANGED: ${{ needs.projects-changed.outputs.cmd-unchanged }}
-        run: |
-          echo "$UNCHANGED"
+      - run: |
+          echo "Running e2e tests"
 
-
-  final-step:
-    needs: [ build-go-projects ]
+  conclusion:
+    needs: [ test-go-projects, e2e-tests ]
     if: ${{ always() }}
     runs-on: [ self-hosted, small ]
     steps:
