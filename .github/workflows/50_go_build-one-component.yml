@@ -22,6 +22,14 @@ on:
         required: false
         type: string
         default: 'wip_ignore_for_now'
+      docker-image-base:
+        required: false
+        type: string
+        default: ''
+      retag-base-image:
+        required: false
+        type: boolean
+        default: false
       pack-to-docker-image:
         required: false
         type: boolean
