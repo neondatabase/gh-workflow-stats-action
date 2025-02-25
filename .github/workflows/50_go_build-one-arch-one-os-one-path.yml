@@ -145,17 +145,21 @@ jobs:
           DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
           BASE_SHA: ${{ inputs.base-sha }}
           HEAD_SHA: ${{ inputs.head-sha }}
+        continue-on-error: true
         run: |
           docker buildx imagetools create \
             --tag "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}" \
             "${DOCKER_IMAGE_BASE}:commit-${BASE_SHA}"
       - uses: actions/checkout@v4
+        if: inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success')
       - uses: actions/setup-go@v5
+        if: inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success')
         id: setup-go
         with:
           cache: false
           go-version-file: ${{ inputs.go-mod-path }}
       - id: setup-keys
+        if: inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success')
         run: |
           echo "go-build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
@@ -212,22 +216,29 @@ jobs:
             ${{ steps.setup-keys.outputs.go-build }}
           key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
       - name: Go Build
+        if: inputs.run-build || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success')
         run: |
           GOARCH=${{ steps.setup-keys.outputs.goarch }} \
           GOOS=${{ steps.setup-keys.outputs.goos }} \
           go build -v -o "build/$(basename ${{ inputs.cmd-path }})" ${{ inputs.cmd-path }}
       - name: Pack as Docker image
-        if: ${{ inputs.pack-to-docker-image }}
+        if: inputs.pack-to-docker-image || (inputs.retag-base-image && steps.docker-retag.conclusion != 'success')
+        env:
+          DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
+          BASE_SHA: ${{ inputs.base-sha }}
+          HEAD_SHA: ${{ inputs.head-sha }}
         run: |
           echo "+++ BUILD:"
           ls -laht build/
-          docker build -t "${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }}):${{ inputs.head-sha}}" \
+          docker build \
+            --tag "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}"
             --platform ${{ steps.setup-keys.outputs.goarch }} \
             --build-arg BINARY_TO_ADD="$(basename ${{ inputs.cmd-path }})" \
             --file Dockerfiles/go-app-common.Dockerfile \
             build/
           docker image ls
-          echo "Packing to the Docker image..."
+          docker push \
+            "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}"
 
   test:
     name: "Test for the ${{ inputs.goos }}/${{ inputs.goarch }}"
