@@ -61,7 +61,9 @@ jobs:
       cmd-path: './cmd/${{ inputs.component-name }}'
       goarch: ${{ matrix.goarch }}
       goos: ${{ matrix.goos }}
+      docker-image-base: ${{ inputs.docker-image-base }}
       pack-to-docker-image: ${{ inputs.pack-to-docker-image }}
+      retag-base-image: ${{ inputs.retag-base-image }}
       base-sha: ${{ inputs.base-sha }}
       head-sha: ${{ inputs.head-sha }}
       go-build-cache-restore-or-update: ${{ inputs.go-build-cache-restore-or-update }}
