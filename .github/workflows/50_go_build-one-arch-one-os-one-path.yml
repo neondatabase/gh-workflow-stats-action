@@ -139,27 +139,13 @@ jobs:
         with:
           username: ${{ secrets.NEON_DOCKERHUB_USERNAME }}
           password: ${{ secrets.NEON_DOCKERHUB_PASSWORD }}
-      - id: docker-retag
-        if: ${{ inputs.retag-base-image }}
-        env:
-          DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
-          BASE_SHA: ${{ inputs.base-sha }}
-          HEAD_SHA: ${{ inputs.head-sha }}
-        continue-on-error: true
-        run: |
-          docker buildx imagetools create \
-            --tag "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}" \
-            "${DOCKER_IMAGE_BASE}:commit-${BASE_SHA}"
       - uses: actions/checkout@v4
-        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
       - uses: actions/setup-go@v5
-        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
         id: setup-go
         with:
           cache: false
           go-version-file: ${{ inputs.go-mod-path }}
       - id: setup-keys
-        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
         run: |
           echo "go-build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
@@ -167,6 +153,20 @@ jobs:
           echo "goos=${{ needs.prepare-running-env.outputs.goos }}" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}" >> "$GITHUB_OUTPUT"
           echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}" >> "$GITHUB_OUTPUT"
+      - id: docker-retag
+        if: ${{ inputs.retag-base-image }}
+        env:
+          DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
+          BASE_SHA: ${{ inputs.base-sha }}
+          HEAD_SHA: ${{ inputs.head-sha }}
+          BASE_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.base-sha }}
+          HEAD_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.head-sha }}
+          PLATFORM: ${{ steps.setup-keys.outputs.goarch }}
+        continue-on-error: true
+        run: |
+          docker buildx imagetools create \
+            --tag "${DOCKER_IMAGE_BASE}:${HEAD_TAG}" \
+            "${DOCKER_IMAGE_BASE}:${BASE_TAG}"
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
@@ -217,6 +217,9 @@ jobs:
           key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
       - name: Go Build
         if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
+        env:
+          GOARCH: ${{ steps.setup-keys.outputs.goarch }}
+          GOOS: ${{ steps.setup-keys.outputs.goos }}
         run: |
           GOARCH=${{ steps.setup-keys.outputs.goarch }} \
           GOOS=${{ steps.setup-keys.outputs.goos }} \
@@ -225,20 +228,21 @@ jobs:
         if: ${{ inputs.pack-to-docker-image || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
         env:
           DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
-          BASE_SHA: ${{ inputs.base-sha }}
-          HEAD_SHA: ${{ inputs.head-sha }}
+          BASE_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.base-sha }}
+          HEAD_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.head-sha }}
+          PLATFORM: ${{ steps.setup-keys.outputs.goarch }}
         run: |
           echo "+++ BUILD:"
           ls -laht build/
           docker build \
-            --tag "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}" \
-            --platform ${{ steps.setup-keys.outputs.goarch }} \
+            --tag "${DOCKER_IMAGE_BASE}:${HEAD_TAG}" \
+            --platform "${PLATFORM}" \
             --build-arg BINARY_TO_ADD="$(basename ${{ inputs.cmd-path }})" \
             --file Dockerfiles/go-app-common.Dockerfile \
             build/
           docker image ls
           docker push \
-            "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}"
+            "${DOCKER_IMAGE_BASE}:${HEAD_TAG}"
 
   test:
     name: "Test for the ${{ inputs.goos }}/${{ inputs.goarch }}"
