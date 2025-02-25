@@ -231,7 +231,7 @@ jobs:
           echo "+++ BUILD:"
           ls -laht build/
           docker build \
-            --tag "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}"
+            --tag "${DOCKER_IMAGE_BASE}:commit-${HEAD_SHA}" \
             --platform ${{ steps.setup-keys.outputs.goarch }} \
             --build-arg BINARY_TO_ADD="$(basename ${{ inputs.cmd-path }})" \
             --file Dockerfiles/go-app-common.Dockerfile \
