@@ -60,6 +60,7 @@ jobs:
   prepare-running-env:
     name: Prepare env for "${{ inputs.goos }}/${{ inputs.goarch }}"
     runs-on: [ self-hosted, small ]
+    if: ${{ inputs.retag-base-image || inputs.run-build || inputs.run-tests }}
     outputs:
       goarch: ${{ steps.goarch-goos.outputs.goarch }}
       goos: ${{ steps.goarch-goos.outputs.goos }}
@@ -248,6 +249,7 @@ jobs:
     name: "Test for the ${{ inputs.goos }}/${{ inputs.goarch }}"
     needs: [ prepare-running-env ]
     runs-on: [ self-hosted, small ]
+    if: ${{ inputs.run-tests }}
     steps:
       - id: keys-sanity-check
         run: |
