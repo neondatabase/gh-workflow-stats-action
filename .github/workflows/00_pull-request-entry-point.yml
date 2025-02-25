@@ -75,7 +75,7 @@ jobs:
         go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
     uses: ./.github/workflows/50_go_build-one-component.yml
     secrets: inherit
-    name: 'Golang: ${{ matrix.go-component }}'
+    name: 'Build: ${{ matrix.go-component }}'
     with:
       component-name: ${{ matrix.go-component }}
       base-sha: ${{ github.event.pull_request.base.sha }}
@@ -92,7 +92,7 @@ jobs:
         go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
     uses: ./.github/workflows/50_go_build-one-component.yml
     secrets: inherit
-    name: 'Golang: ${{ matrix.go-component }}'
+    name: 'Unit Tests: ${{ matrix.go-component }}'
     with:
       component-name: ${{ matrix.go-component }}
       base-sha: ${{ github.event.pull_request.base.sha }}
