@@ -26,6 +26,22 @@ on:
         required: false
         type: string
         default: ''   # default is to take it from ${{ runner.os }}
+      docker-image-base:
+        required: false
+        type: string
+        default: ''
+      retag-base-image:
+        required: false
+        type: boolean
+        default: false
+      run-build:
+        required: false
+        type: boolean
+        default: false
+      run-tests:
+        required: false
+        type: boolean
+        default: false
       pack-to-docker-image:
         required: false
         type: boolean
@@ -44,6 +60,7 @@ jobs:
   prepare-running-env:
     name: Prepare env for "${{ inputs.goos }}/${{ inputs.goarch }}"
     runs-on: [ self-hosted, small ]
+    if: ${{ inputs.retag-base-image || inputs.run-build || inputs.run-tests }}
     outputs:
       goarch: ${{ steps.goarch-goos.outputs.goarch }}
       goos: ${{ steps.goarch-goos.outputs.goos }}
@@ -101,6 +118,7 @@ jobs:
     name: "Build for the ${{ inputs.goos }}/${{ inputs.goarch }} ${{ inputs.pack-to-docker-image && 'and pack to the Docker image'}}"
     needs: [ prepare-running-env ]
     runs-on: [ self-hosted, small ]
+    if: ${{ inputs.retag-base-image || inputs.run-build }}
     steps:
       - id: keys-sanity-check
         run: |
@@ -116,6 +134,12 @@ jobs:
             exit_code=$(( exit_code + 2 ))
           fi
           exit ${exit_code}
+      - id: docker-login
+        if: ${{ inputs.retag-base-image || inputs.pack-to-docker-image }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.NEON_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.NEON_DOCKERHUB_PASSWORD }}
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         id: setup-go
@@ -130,6 +154,20 @@ jobs:
           echo "goos=${{ needs.prepare-running-env.outputs.goos }}" >> "$GITHUB_OUTPUT"
           echo "go-mod-cache-key=${{ needs.prepare-running-env.outputs.go-mod-cache-key }}" >> "$GITHUB_OUTPUT"
           echo "go-build-cache-key-cmd=${{ needs.prepare-running-env.outputs.go-build-cache-key-cmd }}" >> "$GITHUB_OUTPUT"
+      - id: docker-retag
+        if: ${{ inputs.retag-base-image }}
+        env:
+          DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
+          BASE_SHA: ${{ inputs.base-sha }}
+          HEAD_SHA: ${{ inputs.head-sha }}
+          BASE_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.base-sha }}
+          HEAD_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.head-sha }}
+          PLATFORM: ${{ steps.setup-keys.outputs.goarch }}
+        continue-on-error: true
+        run: |
+          docker buildx imagetools create \
+            --tag "${DOCKER_IMAGE_BASE}:${HEAD_TAG}" \
+            "${DOCKER_IMAGE_BASE}:${BASE_TAG}"
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
@@ -179,27 +217,39 @@ jobs:
             ${{ steps.setup-keys.outputs.go-build }}
           key: ${{ steps.setup-keys.outputs.go-build-cache-key-cmd }}
       - name: Go Build
+        if: ${{ inputs.run-build || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
+        env:
+          GOARCH: ${{ steps.setup-keys.outputs.goarch }}
+          GOOS: ${{ steps.setup-keys.outputs.goos }}
         run: |
           GOARCH=${{ steps.setup-keys.outputs.goarch }} \
           GOOS=${{ steps.setup-keys.outputs.goos }} \
           go build -v -o "build/$(basename ${{ inputs.cmd-path }})" ${{ inputs.cmd-path }}
       - name: Pack as Docker image
-        if: ${{ inputs.pack-to-docker-image }}
+        if: ${{ inputs.pack-to-docker-image || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
+        env:
+          DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
+          BASE_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.base-sha }}
+          HEAD_TAG: arch-${{ steps.setup-keys.outputs.goarch }}-commit-${{ inputs.head-sha }}
+          PLATFORM: ${{ steps.setup-keys.outputs.goarch }}
         run: |
           echo "+++ BUILD:"
           ls -laht build/
-          docker build -t "${{ github.event.repository.name }}-$(basename ${{ inputs.cmd-path }}):${{ inputs.head-sha}}" \
-            --platform ${{ steps.setup-keys.outputs.goarch }} \
+          docker build \
+            --tag "${DOCKER_IMAGE_BASE}:${HEAD_TAG}" \
+            --platform "${PLATFORM}" \
             --build-arg BINARY_TO_ADD="$(basename ${{ inputs.cmd-path }})" \
             --file Dockerfiles/go-app-common.Dockerfile \
             build/
           docker image ls
-          echo "Packing to the Docker image..."
+          docker push \
+            "${DOCKER_IMAGE_BASE}:${HEAD_TAG}"
 
   test:
     name: "Test for the ${{ inputs.goos }}/${{ inputs.goarch }}"
     needs: [ prepare-running-env ]
     runs-on: [ self-hosted, small ]
+    if: ${{ inputs.run-tests }}
     steps:
       - id: keys-sanity-check
         run: |

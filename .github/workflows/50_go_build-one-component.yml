@@ -22,6 +22,22 @@ on:
         required: false
         type: string
         default: 'wip_ignore_for_now'
+      docker-image-base:
+        required: false
+        type: string
+        default: ''
+      retag-base-image:
+        required: false
+        type: boolean
+        default: false
+      run-build:
+        required: false
+        type: boolean
+        default: false
+      run-tests:
+        required: false
+        type: boolean
+        default: false
       pack-to-docker-image:
         required: false
         type: boolean
@@ -53,7 +69,11 @@ jobs:
       cmd-path: './cmd/${{ inputs.component-name }}'
       goarch: ${{ matrix.goarch }}
       goos: ${{ matrix.goos }}
+      docker-image-base: ${{ inputs.docker-image-base }}
       pack-to-docker-image: ${{ inputs.pack-to-docker-image }}
+      run-build: ${{ inputs.run-build }}
+      run-tests: ${{ inputs.run-tests }}
+      retag-base-image: ${{ inputs.retag-base-image }}
       base-sha: ${{ inputs.base-sha }}
       head-sha: ${{ inputs.head-sha }}
       go-build-cache-restore-or-update: ${{ inputs.go-build-cache-restore-or-update }}
