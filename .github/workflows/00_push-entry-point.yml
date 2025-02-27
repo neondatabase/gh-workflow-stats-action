@@ -15,11 +15,11 @@ jobs:
     strategy:
       matrix:
         go-component: [ 'gh-action', 'history-exporter' ]
-    uses: ./.github/workflows/50_go_build-one-component.yml
+    uses: ./.github/workflows/50_go_build-component.yml
     secrets: inherit
     name: 'Golang: ${{ matrix.go-component }}'
     with:
-      component-name: ${{ matrix.go-component }}
+      cmd-path: './cmd/${{ matrix.go-component}}'
       base-sha: ${{ github.event.after }}
       head-sha: ${{ github.event.after }}
       docker-image-base: neondatabase/${{ matrix.go-component }}
@@ -27,20 +27,22 @@ jobs:
       pack-to-docker-image: true
       go-build-cache-restore-or-update: 'update'
       go-mod-cache-restore-or-update: 'update'
+      goos: linux
+      goarch: amd64
 
   test-go-projects:
     strategy:
       matrix:
         go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
-    uses: ./.github/workflows/50_go_build-one-component.yml
+    uses: ./.github/workflows/50_go_test-component.yml
     secrets: inherit
     name: 'Unit Tests: ${{ matrix.go-component }}'
     with:
-      component-name: ${{ matrix.go-component }}
+      cmd-path: './cmd/${{ matrix.go-component}}'
       base-sha: ${{ github.event.after }}
       head-sha: ${{ github.event.after }}
-      docker-image-base: neondatabase/${{ matrix.go-component }}
-      run-tests: true
+      goos: linux
+      goarch: amd64
 
   e2e-tests:
     needs: [ build-go-projects ]

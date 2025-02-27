@@ -1,5 +1,7 @@
 package db
 
+// Trigger
+
 import (
 	"context"
 	"fmt"
