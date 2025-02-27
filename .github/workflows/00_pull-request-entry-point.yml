@@ -90,15 +90,13 @@ jobs:
     strategy:
       matrix:
         go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
-    uses: ./.github/workflows/50_go_build-one-component.yml
+    uses: ./.github/workflows/50_go_test-component.yml
     secrets: inherit
     name: 'Unit Tests: ${{ matrix.go-component }}'
     with:
-      component-name: ${{ matrix.go-component }}
+      cmd-path: './cmd/${{ matrix.go-component }}'
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
-      docker-image-base: neondatabase/${{ matrix.go-component }}
-      run-tests: true
 
   e2e-tests:
     needs: [ build-or-retag-go-projects ]
