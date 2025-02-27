@@ -81,7 +81,8 @@ jobs:
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
       docker-image-base: neondatabase/${{ matrix.go-component }}
-      retag-base-image: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && ! needs.projects-changed.outputs.go-mod-changes && ! needs.projects-changed.outputs.common-libs-changes }}
+      retag-base-image: >
+        ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && ! needs.projects-changed.outputs.go-mod-changes && ! needs.projects-changed.outputs.common-libs-changes }}
       pack-to-docker-image: true
 
   test-go-projects:
@@ -96,6 +97,8 @@ jobs:
       cmd-path: './cmd/${{ matrix.go-component }}'
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
+      skip-tests: >
+        ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && ! contains(needs.projects-changed.outputs.tests-changes, format('{0}-tests', matrix.go-component)) && ! needs.projects-changed.outputs.go-mod-changes && ! needs.projects-changed.outputs.common-libs-changes }}
 
   e2e-tests:
     needs: [ build-or-retag-go-projects ]

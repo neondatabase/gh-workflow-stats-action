@@ -6,6 +6,10 @@ on:
       cmd-path:
         required: true
         type: string
+      skip-tests:
+        required: false
+        type: boolean
+        default: false
       go-cache-restore-or-update:
         required: false
         type: string
@@ -39,6 +43,7 @@ on:
 jobs:
   go-test:
     name: Test ${{ inputs.cmd-path }} for "${{ inputs.goos }}/${{ inputs.goarch }}"
+    if: ! inputs.skip-tests
     runs-on: [ self-hosted, small ]
     outputs:
       goarch: ${{ steps.goarch-goos.outputs.goarch }}
@@ -127,7 +132,7 @@ jobs:
             ${{ steps.set-cache-keys.outputs.go-build-cache-key-base }}
       - name: Go Test
         env:
-          GOARCH: ${{ steps.set-cache-keys.outputs.goarch }}
-          GOOS: ${{ steps.set-cache-keys.outputs.goos }}
+          GOARCH: ${{ steps.goarch-goos.outputs.goarch }}
+          GOOS: ${{ steps.goarch-goos.outputs.goos }}
           CMD_PATH: ${{ inputs.cmd-path }}
         run: go test -v "${CMD_PATH}"
