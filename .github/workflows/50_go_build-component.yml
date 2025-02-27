@@ -175,7 +175,7 @@ jobs:
         run: |
           go build -v -o "build/$(basename ${CMD_PATH})" "${CMD_PATH}"
       - name: Pack as Docker image
-        if: ${{ inputs.pack-to-docker-image || (inputs.retag-base-image && steps.docker-retag.outcome != 'success') }}
+        if: ${{ steps.docker-retag.outcome != 'success' }}
         env:
           DOCKER_IMAGE_BASE: ${{ inputs.docker-image-base }}
           BASE_TAG: arch-${{ steps.goarch-goos.outputs.goarch }}-commit-${{ inputs.base-sha }}
