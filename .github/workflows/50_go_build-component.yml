@@ -164,8 +164,6 @@ jobs:
           path: |
             ${{ steps.set-cache-keys.outputs.go-build }}
           key: ${{ steps.set-cache-keys.outputs.go-build-cache-key-head }}
-          restore-keys: |
-            ${{ steps.set-cache-keys.outputs.go-build-cache-key-base }}
       - name: Go Build
         if: ${{ steps.docker-retag.outcome != 'success' }}
         env:
