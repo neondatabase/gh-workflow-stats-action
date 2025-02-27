@@ -100,6 +100,8 @@ jobs:
       docker-image-base: neondatabase/${{ matrix.go-component }}
       retag-base-image: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (needs.projects-changed.outputs.any-common-changes != 'true') }}
       pack-to-docker-image: true
+      goos: linux
+      goarch: amd64
 
   test-go-projects:
     needs: [ check-permissions, projects-changed ]
@@ -114,6 +116,8 @@ jobs:
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
       skip-tests: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (! contains(needs.projects-changed.outputs.tests-changes, format('{0}-tests', matrix.go-component))) && (needs.projects-changed.outputs.any-common-changes != 'true') }}
+      goos: linux
+      goarch: amd64
 
   e2e-tests:
     needs: [ build-or-retag-go-projects ]
