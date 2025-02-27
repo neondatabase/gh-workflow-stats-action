@@ -69,6 +69,22 @@ jobs:
           echo "cmd-unchanged=${cmd_unchanged}" >> "${GITHUB_OUTPUT}"
 
 
+  debug-projects-changed:
+    needs: [ projects-changed ]
+    runs-on: [ self-hosted, small ]
+    steps:
+      - name: show outputs
+        env:
+          CHANGES_GO_PROJECTS: ${{ needs.projects-changed.outputs.go-projects-changes }}
+          CHANGES_GO_MOD: ${{ needs.projects-changed.outputs.go-mod-changes }}
+          CHANGES_COMMON_LIB: ${{ needs.projects-changed.outputs.common-libs-changes }}
+          CHANGES_ANY_COMMON: ${{ needs.projects-changed.outputs.any-common-changes }}
+          CHANGES_CMD_CHANGES: ${{ needs.projects-changed.outputs.cmd-changes }}
+          CHANGES_TEST_CHANGES: ${{ needs.projects-changed.outputs.tests-changes }}
+          CHANGES_CMD_UNCHANGED: ${{ needs.projects-changed.outputs.cmd-unchanged }}
+        run: |
+          env
+
   build-or-retag-go-projects:
     needs: [ check-permissions, projects-changed ]
     strategy:
