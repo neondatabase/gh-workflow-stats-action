@@ -26,6 +26,7 @@ jobs:
       go-projects-changes: ${{ steps.go-projects-changes.outputs.changes }}
       go-mod-changes: ${{ steps.go-projects-changes.outputs.go-mod }}
       common-libs-changes: ${{ steps.go-projects-changes.outputs.common-libs }}
+      any-common-changes: ${{ fromJson(steps.go-projects-changes.outputs.go-mod) || fromJson(steps.go-projects-changes.outputs.common-libs) }}
       cmd-changes: ${{ steps.per-component-changes.outputs.cmd-changes }}
       tests-changes: ${{ steps.per-component-changes.outputs.tests-changes }}
       cmd-unchanged: ${{ steps.per-component-changes.outputs.cmd-unchanged }}
@@ -81,7 +82,7 @@ jobs:
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
       docker-image-base: neondatabase/${{ matrix.go-component }}
-      retag-base-image: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (needs.projects-changed.outputs.common-libs-changes != 'true') }}
+      retag-base-image: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (needs.projects-changed.outputs.any-common-changes != 'true') }}
       pack-to-docker-image: true
 
   test-go-projects:
@@ -96,7 +97,7 @@ jobs:
       cmd-path: './cmd/${{ matrix.go-component }}'
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
-      skip-tests: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (! contains(needs.projects-changed.outputs.tests-changes, format('{0}-tests', matrix.go-component))) }}
+      skip-tests: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (! contains(needs.projects-changed.outputs.tests-changes, format('{0}-tests', matrix.go-component))) && (needs.projects-changed.outputs.any-common-changes != 'true') }}
 
   e2e-tests:
     needs: [ build-or-retag-go-projects ]
