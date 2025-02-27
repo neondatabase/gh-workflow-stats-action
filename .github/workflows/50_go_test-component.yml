@@ -88,7 +88,6 @@ jobs:
           echo "go-mod-cache-key=go-mod-cache-${OS}-${ARCH}-go-${GO_VER}-${GO_SUM_HASH}" >> "$GITHUB_OUTPUT"
           echo "go-build-cache-key-base=go-build-cache-${OS}-${ARCH}-go-${GO_VER}-gh-${GH_REPO}-git-${BASE_SHA}-tests-${CMD_PATH}" >> "$GITHUB_OUTPUT"
           echo "go-build-cache-key-head=go-build-cache-${OS}-${ARCH}-go-${GO_VER}-gh-${GH_REPO}-git-${HEAD_SHA}-tests-${CMD_PATH}" >> "$GITHUB_OUTPUT"
-          done
       - name: Go Mod Cache
         uses: tespkg/actions-cache@v1
         if: ${{ inputs.go-mod-cache-restore-or-update == 'update' }}
