@@ -188,7 +188,7 @@ jobs:
           docker build \
             --tag "${DOCKER_IMAGE_BASE}:${HEAD_TAG}" \
             --platform "${PLATFORM}" \
-            --build-arg BINARY_TO_ADD=$(basename "${CMD_PATH}") \
+            --build-arg BINARY_TO_ADD="$(basename "${CMD_PATH}")" \
             --file Dockerfiles/go-app-common.Dockerfile \
             build/
           docker push \
