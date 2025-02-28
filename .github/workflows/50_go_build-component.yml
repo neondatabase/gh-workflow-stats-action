@@ -171,7 +171,7 @@ jobs:
           GOOS: ${{ steps.goarch-goos.outputs.goos }}
           CMD_PATH: ${{ inputs.cmd-path }}
         run: |
-          go build -v -o "build/$(basename ${CMD_PATH})" "${CMD_PATH}"
+          go build -v -o build/$(basename "${CMD_PATH}") "${CMD_PATH}"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Pack as Docker image
@@ -188,7 +188,7 @@ jobs:
           docker build \
             --tag "${DOCKER_IMAGE_BASE}:${HEAD_TAG}" \
             --platform "${PLATFORM}" \
-            --build-arg BINARY_TO_ADD="$(basename ${CMD_PATH})" \
+            --build-arg BINARY_TO_ADD=$(basename "${CMD_PATH}") \
             --file Dockerfiles/go-app-common.Dockerfile \
             build/
           docker push \
