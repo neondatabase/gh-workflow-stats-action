@@ -97,7 +97,7 @@ jobs:
       cmd-path: './cmd/${{ matrix.go-component }}'
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
-      docker-image-base: neondatabase/${{ matrix.go-component }}
+      docker-image-base: ${{ format('ghcr.io/{0}-{1}', github.repository, matrix.go-component) }}
       retag-base-image: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (needs.projects-changed.outputs.any-common-changes != 'true') }}
       pack-to-docker-image: true
       goos: linux

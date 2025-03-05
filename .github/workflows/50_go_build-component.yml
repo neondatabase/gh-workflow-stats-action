@@ -57,9 +57,12 @@ on:
 
 
 jobs:
-  prepare-running-env:
+  go-build-component:
     name: Build ${{ inputs.cmd-path}} for "${{ inputs.goos }}/${{ inputs.goarch }}"
     runs-on: [ self-hosted, small ]
+    permissions:
+      contents: read
+      packages: write
     outputs:
       goarch: ${{ steps.goarch-goos.outputs.goarch }}
       goos: ${{ steps.goarch-goos.outputs.goos }}
@@ -112,8 +115,9 @@ jobs:
         if: ${{ inputs.retag-base-image || inputs.pack-to-docker-image }}
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.NEON_DOCKERHUB_USERNAME }}
-          password: ${{ secrets.NEON_DOCKERHUB_PASSWORD }}
+          registry: https://ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - id: docker-retag
         if: ${{ inputs.retag-base-image }}
         env:
