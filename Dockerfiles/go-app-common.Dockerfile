@@ -12,5 +12,6 @@ FROM --platform=$TARGETPLATFORM ${BASE_IMAGE_SHA}
 ARG BINARY_TO_ADD
 
 ADD ${BINARY_TO_ADD} /usr/local/bin/
+RUN ln -s /usr/local/bin/${BINARY_TO_ADD} /usr/local/bin/entrypoint
 
-ENTRYPOINT ["/usr/local/bin/${BINARY_TO_ADD}"]
+ENTRYPOINT ["/usr/local/bin/entrypoint"]
