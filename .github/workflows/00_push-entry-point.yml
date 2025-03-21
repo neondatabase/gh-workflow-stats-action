@@ -12,6 +12,9 @@ jobs:
 
   build-go-projects:
     needs: [ workflows-sanity-checks ]
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         go-component: [ 'gh-action', 'history-exporter' ]

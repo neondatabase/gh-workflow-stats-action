@@ -87,6 +87,9 @@ jobs:
 
   build-or-retag-go-projects:
     needs: [ check-permissions, projects-changed ]
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
