@@ -87,6 +87,9 @@ jobs:
 
   build-or-retag-go-projects:
     needs: [ check-permissions, projects-changed ]
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         go-component: ${{ fromJson('["gh-action", "history-exporter"]') }}
@@ -97,7 +100,7 @@ jobs:
       cmd-path: './cmd/${{ matrix.go-component }}'
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
-      docker-image-base: neondatabase/${{ matrix.go-component }}
+      docker-image-base: ghcr.io/${{ github.repository }}-${{ matrix.go-component }}
       retag-base-image: ${{ contains(needs.projects-changed.outputs.cmd-unchanged, matrix.go-component) && (needs.projects-changed.outputs.any-common-changes != 'true') }}
       pack-to-docker-image: true
       goos: linux

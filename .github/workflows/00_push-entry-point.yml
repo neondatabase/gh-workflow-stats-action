@@ -12,6 +12,9 @@ jobs:
 
   build-go-projects:
     needs: [ workflows-sanity-checks ]
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         go-component: [ 'gh-action', 'history-exporter' ]
@@ -22,7 +25,7 @@ jobs:
       cmd-path: './cmd/${{ matrix.go-component}}'
       base-sha: ${{ github.event.after }}
       head-sha: ${{ github.event.after }}
-      docker-image-base: neondatabase/${{ matrix.go-component }}
+      docker-image-base: ghcr.io/${{ github.repository }}-${{ matrix.go-component }}
       run-build: true
       pack-to-docker-image: true
       go-build-cache-restore-or-update: 'update'
