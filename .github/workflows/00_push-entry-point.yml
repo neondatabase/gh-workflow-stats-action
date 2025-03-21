@@ -22,7 +22,7 @@ jobs:
       cmd-path: './cmd/${{ matrix.go-component}}'
       base-sha: ${{ github.event.after }}
       head-sha: ${{ github.event.after }}
-      docker-image-base: ${{ format('ghcr.io/{0}-{1}', github.repository, matrix.go-component) }}
+      docker-image-base: ghcr.io/${{ github.repository }}-${{ matrix.go-component }}
       run-build: true
       pack-to-docker-image: true
       go-build-cache-restore-or-update: 'update'
