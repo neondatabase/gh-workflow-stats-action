@@ -11,6 +11,8 @@ ARG BASE_IMAGE_SHA=debian@$BOOKWORM_SLIM_SHA
 FROM --platform=$TARGETPLATFORM ${BASE_IMAGE_SHA}
 ARG BINARY_TO_ADD
 
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+
 ADD ${BINARY_TO_ADD} /usr/local/bin/
 RUN ln -s /usr/local/bin/${BINARY_TO_ADD} /usr/local/bin/entrypoint
 
