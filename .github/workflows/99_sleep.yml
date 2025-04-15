@@ -1,0 +1,12 @@
+name: Sleep
+
+on:
+  pull_request:
+
+jobs:
+  just-sleep:
+    runs-on: [self-hosted, small]
+    steps:
+    - name: Sleep
+      run: |
+        sleep 600
