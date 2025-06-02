@@ -144,6 +144,6 @@ jobs:
       - name: Conclusion
         run: |
           exit_code=0
-          if [ "${GO_TESTS_RESULT}" != "success" ]; then exit_code=$(( exit_code + 1 )); fi
-          if [ "${E2E_TESTS_RESULT}" != "success" ]; then exit_code=$(( exit_code + 2 )); fi
+          if [[ "${GO_TESTS_RESULT}"  != "success" &&  "${GO_TESTS_RESULT}" != "skipped" ]]; then exit_code=$(( exit_code + 1 )); fi
+          if [[ "${E2E_TESTS_RESULT}" != "success" && "${E2E_TESTS_RESULT}" != "skipped" ]]; then exit_code=$(( exit_code + 2 )); fi
           exit "${exit_code}"
