@@ -8,7 +8,7 @@ jobs:
     runs-on: [ self-hosted, small ]
     name: GitHub Actions Sanity Checks
     steps:
-      - uses: actions/checkout@6ccd57f4c5d15bdc2fef309bd9fb6cc9db2ef1c6 # v4.1.7
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v4.1.7
         with:
           sparse-checkout: |
             .github/
