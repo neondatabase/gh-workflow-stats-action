@@ -72,7 +72,7 @@ jobs:
       prepare-runner-os: ${{ runner.os }}
       prepare-runner-arch: ${{ runner.arch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         id: setup-go
         with:
