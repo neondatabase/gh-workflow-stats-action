@@ -55,7 +55,7 @@ jobs:
       prepare-runner-arch: ${{ runner.arch }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         id: setup-go
         with:
           cache: false
