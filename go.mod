@@ -7,7 +7,7 @@ require (
 	github.com/google/go-github/v65 v65.0.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.1
 )
 
 require (
